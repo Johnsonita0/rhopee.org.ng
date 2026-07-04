@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './Navbar.css';
 
 function Navbar({ activePage, onNavigate }) {
@@ -13,7 +13,19 @@ function Navbar({ activePage, onNavigate }) {
     window.location.hash = page === 'home' ? '#home' : '#more';
     onNavigate(page);
     closeMenu();
+    // temporarily expand when user selects a menu while collapsed (auto-show labels)
+    if (collapsed && !userToggled) {
+      // expand for a short duration
+      setCollapsed(false);
+      if (expandTimeoutRef.current) clearTimeout(expandTimeoutRef.current);
+      expandTimeoutRef.current = setTimeout(() => {
+        setCollapsed(true);
+        expandTimeoutRef.current = null;
+      }, 3000);
+    }
   };
+
+  const expandTimeoutRef = useRef(null);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -21,6 +33,12 @@ function Navbar({ activePage, onNavigate }) {
     else root.classList.remove('nav-collapsed');
     return () => root.classList.remove('nav-collapsed');
   }, [collapsed]);
+
+  useEffect(() => {
+    return () => {
+      if (expandTimeoutRef.current) clearTimeout(expandTimeoutRef.current);
+    };
+  }, []);
 
   // responsive auto-collapse (unless user manually toggled)
   useEffect(() => {
