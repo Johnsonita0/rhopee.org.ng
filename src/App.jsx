@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar.jsx';
-import Header from './components/Header.jsx';
-import Scanner from './components/Scanner.jsx';
-import ResultCard from './components/ResultCard.jsx';
+import HomePage from './pages/HomePage.jsx';
+import MorePage from './pages/MorePage.jsx';
+import RegistrationPage from './pages/RegistrationPage.jsx';
 import { verifyIdCode } from './lib/supabaseClient.js';
 import './App.css';
 
@@ -11,6 +11,7 @@ function App() {
   const [verificationResult, setVerificationResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [page, setPage] = useState('home');
 
   const handleScan = async (code) => {
     setScannedCode(code);
@@ -35,8 +36,13 @@ function App() {
       setVerificationResult({
         id: data.id,
         name: data.name,
+        position: data.position,
+        membershipId: data.membership_id,
+        chapter: data.chapter,
         status: data.status,
         issuedAt: data.issued_at ?? 'Unknown',
+        expiresAt: data.expires_at ?? 'Unknown',
+        barcode: code,
       });
     } catch (e) {
       console.error('Verification error:', e);
@@ -46,40 +52,39 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    const updatePageFromHash = () => {
+      const currentHash = window.location.hash.toLowerCase();
+
+      if (currentHash === '#register') {
+        setPage('register');
+      } else if (currentHash === '#more' || ['#gallery', '#news', '#contact'].includes(currentHash)) {
+        setPage('more');
+      } else {
+        setPage('home');
+      }
+    };
+
+    updatePageFromHash();
+    window.addEventListener('hashchange', updatePageFromHash);
+
+    return () => window.removeEventListener('hashchange', updatePageFromHash);
+  }, []);
+
   return (
     <div className="app-shell">
-      <Navbar />
-      <Header />
-      <main className="page-content">
-        <section className="hero-card" id="home">
-          <h2>Scan the barcode on the ID card</h2>
-          <p>Verify identity with Vercel and Supabase after scanning the barcode.</p>
-        </section>
-
-        <Scanner onScan={handleScan} />
-
-        <ResultCard
+      <Navbar activePage={page} onNavigate={setPage} />
+      {page === 'home' && (
+        <HomePage
           scannedCode={scannedCode}
-          result={verificationResult}
+          verificationResult={verificationResult}
           loading={loading}
           error={error}
+          onScan={handleScan}
         />
-
-        <section className="section-block" id="gallery">
-          <h3>Gallery</h3>
-          <p>Display your logo, verification process, and sample card images here.</p>
-        </section>
-
-        <section className="section-block" id="news">
-          <h3>News</h3>
-          <p>Latest updates about RHOPEE ID verification appear here.</p>
-        </section>
-
-        <section className="section-block" id="contact">
-          <h3>Contact Us</h3>
-          <p>Share support or project details for your verification flow.</p>
-        </section>
-      </main>
+      )}
+      {page === 'more' && <MorePage />}
+      {page === 'register' && <RegistrationPage />}
     </div>
   );
 }

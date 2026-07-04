@@ -1,15 +1,39 @@
 :root {
-  color-scheme: dark;
-  color: #0f172a;
-  background: #f8fafc;
-  font-family: Inter, system-ui, sans-serif;
+  --bg: #f4f7f4;
+  --surface: #ffffff;
+  --text: #0b3f1d;
+  --muted: #5a6d64;
+  --brand: #0f5f2b;
+  --brand-dark: #0b3f1d;
+  --brand-soft: #e8f4e8;
+  --accent: #d12222;
+  --border: rgba(15, 95, 43, 0.12);
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  color: var(--text);
+  background: radial-gradient(circle at top, rgba(15, 95, 43, 0.12), transparent 36%),
+    linear-gradient(180deg, #f8fbf8 0%, #e8f1e8 100%);
+  font-family: Inter, system-ui, sans-serif;
 }
 
 * {
   box-sizing: border-box;
+}
+
+a,
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img {
+  display: block;
+  max-width: 100%;
 }

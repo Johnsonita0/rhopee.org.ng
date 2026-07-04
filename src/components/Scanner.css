@@ -1,0 +1,50 @@
+.scanner-panel {
+  padding: 32px;
+  border-radius: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 70px rgba(15, 95, 43, 0.08);
+}
+
+.scanner-panel h3 {
+  margin: 0;
+  color: var(--brand-dark);
+}
+
+.scanner-panel p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.scanner-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 26px;
+}
+
+.scanner-form input {
+  width: 100%;
+  padding: 16px 18px;
+  font-size: 1rem;
+  border: 1px solid rgba(15, 95, 43, 0.16);
+  border-radius: 16px;
+  background: #f8faf8;
+}
+
+.scanner-form button {
+  width: fit-content;
+  padding: 14px 26px;
+  border: none;
+  border-radius: 16px;
+  background: var(--brand);
+  color: white;
+  box-shadow: 0 14px 24px rgba(15, 95, 43, 0.18);
+  transition: transform 180ms ease, background-color 180ms ease;
+  font-weight: 700;
+}
+
+.scanner-form button:hover {
+  transform: translateY(-1px);
+  background: var(--brand-dark);
+}
