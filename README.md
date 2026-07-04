@@ -35,6 +35,18 @@ A Vite + React landing page for ID barcode verification using Supabase.
 4. Build command: `npm run build`
 5. Output directory: `dist`
 
+## Supabase table schema suggestion
+
+Create a table named `id_cards` with at least these columns:
+
+- `id` - primary key (UUID or serial)
+- `barcode` - text, unique
+- `name` - text
+- `status` - text
+- `issued_at` - timestamp or date
+
+Then allow public `SELECT` on `id_cards` if using anon key in the frontend.
+
 ## Project structure
 
 - `src/App.jsx` — main app shell
