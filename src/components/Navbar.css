@@ -244,6 +244,18 @@
     border-radius: 12px;
   }
 
+  .nav-links button .nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-right: 10px;
+    color: #fff;
+  }
+
+  .nav-links button .link-text { display: inline-block; }
+
   .nav-toggle { display: none; }
 
   .nav-backdrop { display: none; }
@@ -277,5 +289,9 @@
 .top-nav.collapsed .brand-button span { display: none; }
 .top-nav.collapsed .nav-links button { justify-content: center; padding-left: 0; padding-right: 0; }
 .top-nav.collapsed .nav-links button .link-text { display: none; }
+.top-nav.collapsed .nav-icon { margin-right: 0; }
 .top-nav.collapsed .nav-inner { align-items: center; }
 .top-nav.collapsed .nav-collapse-toggle { right: -18px; transform: rotate(180deg); }
+
+/* tooltip via title attribute is used; increase icon contrast when collapsed */
+.top-nav.collapsed .nav-icon svg { width: 20px; height: 20px; }
