@@ -56,6 +56,13 @@ export async function uploadPassportFile(file, membershipId) {
   });
 
   if (uploadError) {
+    // provide more context in the client console to help diagnose DNS / CORS / permission issues
+    console.error('Passport upload error', {
+      supabaseUrl,
+      bucket,
+      path,
+      err: uploadError,
+    });
     throw uploadError;
   }
 
