@@ -36,3 +36,10 @@
     padding: 20px 16px 32px;
   }
 }
+
+@media (min-width: 841px) {
+  /* make room for the left sidebar navigation */
+  .app-shell {
+    padding-left: 260px; /* sidebar width (220px) + spacing */
+  }
+}
