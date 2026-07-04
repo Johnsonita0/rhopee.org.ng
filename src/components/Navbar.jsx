@@ -36,7 +36,7 @@ function Navbar({ activePage, onNavigate }) {
   }, [userToggled]);
 
   return (
-    <nav className="top-nav">
+    <nav className={`top-nav ${collapsed ? 'collapsed' : ''}`}>
       <div className="nav-inner">
         <button className="brand-button" type="button" onClick={() => goToPage('home')}>
           <img src="/logo/logo1.jpeg" alt="RHOPEE logo" className="brand-logo" />
