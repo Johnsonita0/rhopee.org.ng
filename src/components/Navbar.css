@@ -248,3 +248,34 @@
 
   .nav-backdrop { display: none; }
 }
+
+/* collapse toggle button (desktop) */
+.nav-collapse-toggle {
+  position: absolute;
+  right: -18px;
+  bottom: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.24);
+}
+
+.nav-collapse-toggle:hover { background: rgba(255,255,255,0.1); }
+
+.top-nav.collapsed {
+  width: 80px;
+}
+
+.top-nav.collapsed .brand-button span { display: none; }
+.top-nav.collapsed .nav-links button { justify-content: center; padding-left: 0; padding-right: 0; }
+.top-nav.collapsed .nav-links button .link-text { display: none; }
+.top-nav.collapsed .nav-inner { align-items: center; }
+.top-nav.collapsed .nav-collapse-toggle { right: -18px; transform: rotate(180deg); }

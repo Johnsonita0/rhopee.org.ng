@@ -43,3 +43,8 @@
     padding-left: 260px; /* sidebar width (220px) + spacing */
   }
 }
+
+/* when nav is collapsed reduce left padding */
+.nav-collapsed .app-shell {
+  padding-left: 120px; /* collapsed sidebar ~80px + spacing */
+}

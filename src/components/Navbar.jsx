@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Navbar.css';
 
 function Navbar({ activePage, onNavigate }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -11,6 +12,13 @@ function Navbar({ activePage, onNavigate }) {
     onNavigate(page);
     closeMenu();
   };
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (collapsed) root.classList.add('nav-collapsed');
+    else root.classList.remove('nav-collapsed');
+    return () => root.classList.remove('nav-collapsed');
+  }, [collapsed]);
 
   return (
     <nav className="top-nav">
@@ -30,29 +38,38 @@ function Navbar({ activePage, onNavigate }) {
           <span />
         </button>
       </div>
-      <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
+      <div className={`nav-links ${menuOpen ? 'open' : ''} ${collapsed ? 'collapsed' : ''}`}>
         <button
           type="button"
           className={activePage === 'home' ? 'active' : ''}
           onClick={() => goToPage('home')}
         >
-          Home
+          <span className="link-text">Home</span>
         </button>
         <button
           type="button"
           className={activePage === 'more' ? 'active' : ''}
           onClick={() => goToPage('more')}
         >
-          More
+          <span className="link-text">More</span>
         </button>
         <button
           type="button"
           className={activePage === 'register' ? 'active' : ''}
           onClick={() => goToPage('register')}
         >
-          Register
+          <span className="link-text">Register</span>
         </button>
       </div>
+      <button
+        type="button"
+        className={`nav-collapse-toggle ${collapsed ? 'collapsed' : ''}`}
+        onClick={() => setCollapsed((c) => !c)}
+        aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
+        title={collapsed ? 'Expand' : 'Collapse'}
+      >
+        {collapsed ? '›' : '‹'}
+      </button>
       {menuOpen && <div className="nav-backdrop" onClick={closeMenu} />}
     </nav>
   );
