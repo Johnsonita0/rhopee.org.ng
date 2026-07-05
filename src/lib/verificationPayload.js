@@ -1,3 +1,5 @@
+import { compressToBase64, decompressFromBase64 } from 'lz-string';
+
 const SCANNABLE_QR_PREFIX = 'RHOPEE';
 
 const buildScannableQrValue = (memberData) => {
@@ -23,6 +25,7 @@ const parseScannableQrValue = (value) => {
   };
 };
 
+// Compress the compact payload using lz-string to produce much shorter tokens for QR codes.
 const encodeVerificationPayload = (memberData) => {
   const compactPayload = {
     n: memberData?.name || '',
@@ -37,10 +40,18 @@ const encodeVerificationPayload = (memberData) => {
   };
 
   const payloadText = JSON.stringify(compactPayload);
-  const encoded = btoa(unescape(encodeURIComponent(payloadText)));
-  const compactEncoded = encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 
-  return encodeURIComponent(compactEncoded);
+  try {
+    const compressed = compressToBase64(payloadText);
+    // make URL-safe
+    const compactEncoded = compressed.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    return encodeURIComponent(compactEncoded);
+  } catch (err) {
+    // Fallback to previous base64 method if compression fails
+    const encoded = btoa(unescape(encodeURIComponent(payloadText)));
+    const compactEncoded = encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    return encodeURIComponent(compactEncoded);
+  }
 };
 
 const decodeVerificationPayload = (value) => {
@@ -63,6 +74,31 @@ const decodeVerificationPayload = (value) => {
     // Fall through to the compact payload decoder.
   }
 
+  // Try decompression first (new compressed format)
+  try {
+    const normalized = decodeURIComponent(value).replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+    const decompressed = decompressFromBase64(padded);
+
+    if (decompressed) {
+      const parsed = JSON.parse(decompressed);
+      return {
+        name: parsed.n,
+        tag: parsed.t,
+        membershipId: parsed.m,
+        chapter: parsed.c,
+        issuedAt: parsed.i,
+        expiresAt: parsed.e,
+        status: parsed.s,
+        outcome: parsed.o,
+        reason: parsed.r,
+      };
+    }
+  } catch (err) {
+    // ignore and fallback
+  }
+
+  // Fallback: previous compact base64 URL-safe decoder
   try {
     const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
     const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);

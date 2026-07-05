@@ -18,6 +18,7 @@ function SuccessPage({ data }) {
   };
 
   const qrSize = 200;
+  const qrSize = 420;
   const qrData = `${window.location.origin}/verifyme?data=${encodeVerificationPayload(qrPayload)}`;
 
   // Download QR code as PNG
@@ -133,16 +134,16 @@ function SuccessPage({ data }) {
               <QRCodeSVG
                 value={qrData}
                 level="H"
-                size={260}
-                includeMargin={true}
+                size={420}
+                includeMargin={false}
                 bgColor="#ffffff"
                 fgColor="#0f5f2b"
                 imageSettings={{
                   src: '/logo/logo1.jpeg',
                   x: undefined,
                   y: undefined,
-                  height: 34,
-                  width: 34,
+                  height: 64,
+                  width: 64,
                   excavate: true,
                 }}
               />

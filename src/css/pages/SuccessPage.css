@@ -111,13 +111,13 @@
   background: #fff;
   border-radius: 16px;
   border: 1px solid rgba(15, 95, 43, 0.08);
-  min-height: 240px;
+  min-height: 480px;
 }
 
 .qr-code-frame {
   position: relative;
-  width: 220px;
-  height: 220px;
+  width: 440px;
+  height: 440px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -143,8 +143,8 @@
   position: absolute;
   inset: 0;
   margin: auto;
-  width: 54px;
-  height: 54px;
+  width: 120px;
+  height: 120px;
   border-radius: 16px;
   background: url('/logo/logo1.jpeg') center/cover no-repeat;
   box-shadow: 0 8px 24px rgba(15, 95, 43, 0.16);
@@ -173,8 +173,8 @@
   display: block;
   width: 100% !important;
   height: 100% !important;
-  max-width: 220px;
-  max-height: 220px;
+  max-width: 420px;
+  max-height: 420px;
   position: relative;
   z-index: 0;
   padding: 8px;
