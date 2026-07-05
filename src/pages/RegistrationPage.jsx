@@ -66,6 +66,7 @@ function RegistrationPage() {
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
+  const [uploadError, setUploadError] = useState(null);
   const [successData, setSuccessData] = useState(null);
 
   const updateField = (field) => (event) => {
@@ -104,15 +105,19 @@ function RegistrationPage() {
 
     // Upload passport file to storage (if present) and use returned public URL
     let passport_url = null;
-    try {
-      if (form.passportFile) {
-        passport_url = await uploadPassportFile(form.passportFile, form.membershipId || form.fullName);
+    let fallback_passport_data = null;
+    setUploadError(null);
+
+    if (form.passportFile) {
+      const res = await uploadPassportFile(form.passportFile, form.membershipId || form.fullName);
+      if (res?.error) {
+        // record error for debug panel and fallback to base64 storage in DB
+        console.warn('Upload failed, falling back to DB storage', res);
+        setUploadError(res);
+        fallback_passport_data = form.passportPreview;
+      } else {
+        passport_url = res?.publicUrl || null;
       }
-    } catch (uploadErr) {
-      console.error('Passport upload error', uploadErr);
-      setError('Failed to upload passport image.');
-      setStatus('error');
-      return;
     }
 
     const payload = {
@@ -122,6 +127,7 @@ function RegistrationPage() {
       chapter: form.chapter,
       local_government: form.localGovernment,
       passport_url,
+      passport_data: fallback_passport_data,
       issued_at: form.issuedAt,
       expires_at: form.expiresAt,
       barcode,
@@ -206,6 +212,16 @@ function RegistrationPage() {
           Expires
           <input type="date" value={form.expiresAt} onChange={updateField('expiresAt')} />
         </label>
+
+        {uploadError && (
+          <details className="debug-panel">
+            <summary>Passport upload failed — debug info (click to expand)</summary>
+            <pre style={{ whiteSpace: 'pre-wrap', fontSize: '12px' }}>
+              {JSON.stringify(uploadError, null, 2)}
+            </pre>
+            <p>The image will be saved inline in the database as a fallback.</p>
+          </details>
+        )}
 
         {error && <p className="form-error">{error}</p>}
 

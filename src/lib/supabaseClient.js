@@ -50,22 +50,21 @@ export async function uploadPassportFile(file, membershipId) {
   const filename = `${membershipId || 'member'}-${Date.now()}.${fileExt}`;
   const path = filename;
 
-  const { data: uploadData, error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
-    cacheControl: '3600',
-    upsert: false,
-  });
-
-  if (uploadError) {
-    // provide more context in the client console to help diagnose DNS / CORS / permission issues
-    console.error('Passport upload error', {
-      supabaseUrl,
-      bucket,
-      path,
-      err: uploadError,
+  try {
+    const { data: uploadData, error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
     });
-    throw uploadError;
-  }
 
-  const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(uploadData.path);
-  return urlData?.publicUrl || null;
+    if (uploadError) {
+      console.error('Passport upload error', { supabaseUrl, bucket, path, err: uploadError });
+      return { publicUrl: null, error: uploadError, context: { supabaseUrl, bucket, path } };
+    }
+
+    const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(uploadData.path);
+    return { publicUrl: urlData?.publicUrl || null };
+  } catch (err) {
+    console.error('Passport upload exception', { supabaseUrl, bucket, path, err });
+    return { publicUrl: null, error: err, context: { supabaseUrl, bucket, path } };
+  }
 }
