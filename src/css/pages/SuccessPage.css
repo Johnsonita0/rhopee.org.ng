@@ -138,6 +138,20 @@
   pointer-events: none;
 }
 
+.qr-code-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: url('/logo/logo1.jpeg') center/cover no-repeat;
+  box-shadow: 0 8px 24px rgba(15, 95, 43, 0.16);
+  z-index: 2;
+  opacity: 0.98;
+}
+
 .qr-code-badge {
   position: absolute;
   top: 10px;
