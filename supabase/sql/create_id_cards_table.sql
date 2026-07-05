@@ -18,8 +18,24 @@ CREATE TABLE IF NOT EXISTS public.id_cards (
   created_at timestamptz DEFAULT now()
 );
 
--- Optional: grant minimal privileges to anon role (use with caution)
--- GRANT SELECT, INSERT ON public.id_cards TO anon;
+-- Enable Row Level Security (RLS)
+ALTER TABLE public.id_cards ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Allow anonymous users to INSERT
+CREATE POLICY "Allow public insert" ON public.id_cards
+FOR INSERT WITH CHECK (true);
+
+-- Policy: Allow anonymous users to SELECT
+CREATE POLICY "Allow public select" ON public.id_cards
+FOR SELECT USING (true);
+
+-- Policy: Allow authenticated users full access
+CREATE POLICY "Allow authenticated access" ON public.id_cards
+FOR ALL USING (auth.role() = 'authenticated');
+
+-- Grant privileges
+GRANT SELECT, INSERT ON public.id_cards TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.id_cards TO authenticated;
 
 -- Verify table
 SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'id_cards';
