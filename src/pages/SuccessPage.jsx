@@ -3,7 +3,7 @@ import QRCode from 'qrcode.react';
 import { useRef, useState } from 'react';
 
 function SuccessPage({ data }) {
-  const qrRef = useRef();
+  const qrCodeRef = useRef();
   const [isDownloading, setIsDownloading] = useState(false);
 
   // Create QR code data - encodes member information for verification
@@ -16,38 +16,23 @@ function SuccessPage({ data }) {
     status: 'verified'
   });
 
-  // Download QR code
-  const downloadQRCode = async () => {
+  // Download QR code as PNG
+  const downloadQRCode = () => {
     try {
       setIsDownloading(true);
-      const element = qrRef.current.querySelector('svg');
-      if (!element) {
-        console.error('QR code SVG not found');
+      if (!qrCodeRef.current) {
+        console.error('QR code ref not found');
         return;
       }
-
-      // Convert SVG to canvas then to PNG
-      const svgData = new XMLSerializer().serializeToString(element);
-      const canvas = document.createElement('canvas');
-      const img = new Image();
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml' });
-      const url = URL.createObjectURL(svgBlob);
-
-      img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        canvas.getContext('2d').drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
-
-        const pngUrl = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = `member-qr-${data.membership_id || data.membershipId}.png`;
-        link.href = pngUrl;
-        link.click();
-        setIsDownloading(false);
-      };
-
-      img.src = url;
+      
+      const url = qrCodeRef.current.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `member-qr-${data.membership_id || data.membershipId}.png`;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setIsDownloading(false);
     } catch (error) {
       console.error('Error downloading QR code:', error);
       setIsDownloading(false);
@@ -95,16 +80,16 @@ function SuccessPage({ data }) {
           </div>
         </div>
 
-        <div className="qr-code-panel" ref={qrRef}>
+        <div className="qr-code-panel">
           <h3>Member Verification QR Code</h3>
           <div className="qr-code-container">
             <QRCode
+              ref={qrCodeRef}
               value={qrData}
               level="H"
               size={256}
               includeMargin={true}
-              renderAs="svg"
-              quietZone={10}
+              renderAs="canvas"
             />
           </div>
           <p className="qr-label">Scan this QR code to verify member details</p>

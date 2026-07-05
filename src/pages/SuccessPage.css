@@ -110,10 +110,14 @@
   background: #fff;
   border-radius: 16px;
   border: 1px solid rgba(15, 95, 43, 0.08);
+  min-height: 290px;
 }
 
 .qr-code-container canvas {
   display: block;
+  width: 100% !important;
+  height: auto !important;
+  max-width: 256px;
 }
 
 .qr-label {
@@ -135,14 +139,19 @@
   font-size: 0.95rem;
 }
 
-.download-qr-btn:hover {
+.download-qr-btn:hover:not(:disabled) {
   background: #0d4d23;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(15, 95, 43, 0.2);
 }
 
-.download-qr-btn:active {
+.download-qr-btn:active:not(:disabled) {
   transform: translateY(0);
+}
+
+.download-qr-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 @media (max-width: 720px) {
