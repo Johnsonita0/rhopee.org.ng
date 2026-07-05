@@ -6,7 +6,7 @@ import RegistrationPage from './pages/RegistrationPage.jsx';
 import VerificationStatusPage from './pages/VerificationStatusPage.jsx';
 import { verifyIdCode } from './lib/supabaseClient.js';
 import './css/App.css';
-import { decodeVerificationPayload, encodeVerificationPayload } from './lib/verificationPayload.js';
+import { decodeVerificationPayload, encodeVerificationPayload, parseScannableQrValue } from './lib/verificationPayload.js';
 
 function App() {
   const [scannedCode, setScannedCode] = useState('');
@@ -81,6 +81,11 @@ function App() {
     const trimmedCode = code?.trim();
     if (!trimmedCode) return null;
 
+    const scannableValue = parseScannableQrValue(trimmedCode);
+    if (scannableValue?.searchValue) {
+      return { barcode: scannableValue.searchValue };
+    }
+
     try {
       const parsedJson = JSON.parse(trimmedCode);
       if (parsedJson && (parsedJson.membershipId || parsedJson.membership_id || parsedJson.name)) {
@@ -124,8 +129,10 @@ function App() {
         return;
       }
 
+      const lookupValue = memberData?.barcode || memberData?.searchValue || code;
+
       // Barcode lookup
-      const { data, error: queryError } = await verifyIdCode(code);
+      const { data, error: queryError } = await verifyIdCode(lookupValue);
 
       if (queryError) {
         console.error('Supabase query error:', queryError);

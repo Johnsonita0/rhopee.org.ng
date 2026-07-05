@@ -1,3 +1,28 @@
+const SCANNABLE_QR_PREFIX = 'RHOPEE';
+
+const buildScannableQrValue = (memberData) => {
+  const searchValue = memberData?.barcode || memberData?.membershipId || memberData?.membership_id || memberData?.id || '';
+  const trimmedValue = String(searchValue || '').trim();
+
+  if (!trimmedValue) {
+    return '';
+  }
+
+  return `${SCANNABLE_QR_PREFIX}:${trimmedValue}`;
+};
+
+const parseScannableQrValue = (value) => {
+  const trimmedValue = String(value || '').trim();
+  if (!trimmedValue.startsWith(`${SCANNABLE_QR_PREFIX}:`)) {
+    return null;
+  }
+
+  return {
+    source: 'qr',
+    searchValue: trimmedValue.slice(SCANNABLE_QR_PREFIX.length + 1).trim(),
+  };
+};
+
 const encodeVerificationPayload = (memberData) => {
   const compactPayload = {
     n: memberData?.name || '',
@@ -60,4 +85,4 @@ const decodeVerificationPayload = (value) => {
   }
 };
 
-export { encodeVerificationPayload, decodeVerificationPayload };
+export { buildScannableQrValue, parseScannableQrValue, encodeVerificationPayload, decodeVerificationPayload };

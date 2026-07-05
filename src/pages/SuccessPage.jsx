@@ -1,7 +1,7 @@
 import '../css/pages/SuccessPage.css';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
-import { encodeVerificationPayload } from '../lib/verificationPayload.js';
+import { buildScannableQrValue } from '../lib/verificationPayload.js';
 
 function SuccessPage({ data }) {
   const qrCodeRef = useRef();
@@ -18,8 +18,11 @@ function SuccessPage({ data }) {
   };
 
   const qrSize = 200;
-  const qrData = `${window.location.origin}/verifyme?data=${encodeVerificationPayload(qrPayload)}`;
-  const qrLinkLabel = qrData.replace(/^https?:\/\//, '').split('/')[0];
+  const qrData = buildScannableQrValue({
+    barcode: data.barcode,
+    membershipId: data.membership_id || data.membershipId,
+    id: data.id,
+  }) || `${window.location.origin}/verifyme?data=${encodeURIComponent(JSON.stringify(qrPayload))}`;
 
   // Download QR code as PNG
   const downloadQRCode = () => {
@@ -130,8 +133,7 @@ function SuccessPage({ data }) {
           <h3>Member Verification QR Code</h3>
           <div className="qr-code-container" ref={qrCodeRef}>
             <div className="qr-code-frame">
-              <span className="qr-corner-marker qr-corner-marker--top-left">scan</span>
-              <span className="qr-corner-marker qr-corner-marker--bottom-right">{qrLinkLabel}</span>
+              <div className="qr-code-badge">RHOPEE</div>
               <QRCodeSVG
                 value={qrData}
                 level="H"
