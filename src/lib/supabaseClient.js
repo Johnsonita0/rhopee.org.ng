@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseBucket = import.meta.env.VITE_SUPABASE_BUCKET || 'passports';
 
 const missingSupabaseConfig = !supabaseUrl || !supabaseAnonKey;
 
@@ -45,7 +46,7 @@ export async function uploadPassportFile(file, membershipId) {
     );
   }
 
-  const bucket = 'passports';
+  const bucket = supabaseBucket;
   const fileExt = (file.name && file.name.split('.').pop()) || 'png';
   const filename = `${membershipId || 'member'}-${Date.now()}.${fileExt}`;
   const path = filename;
