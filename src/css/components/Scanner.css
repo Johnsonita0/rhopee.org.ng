@@ -148,3 +148,34 @@
   background: rgba(15, 95, 43, 0.12);
   border-color: rgba(15, 95, 43, 0.3);
 }
+
+@media (max-width: 640px) {
+  .scanner-panel {
+    padding: 22px;
+    border-radius: 20px;
+  }
+
+  .scanner-form {
+    gap: 12px;
+  }
+
+  .scanner-form button,
+  .verify-btn,
+  .cancel-btn {
+    width: 100%;
+  }
+
+  .qr-result {
+    gap: 16px;
+  }
+
+  .qr-parsed-data {
+    padding: 18px;
+  }
+
+  .verify-btn,
+  .cancel-btn {
+    font-size: 0.98rem;
+    padding: 13px 18px;
+  }
+}

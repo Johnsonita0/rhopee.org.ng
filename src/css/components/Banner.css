@@ -4,6 +4,8 @@
   border-radius: 32px;
   min-height: 420px;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
   background-image: linear-gradient(180deg, rgba(15, 95, 43, 0.72), rgba(15, 95, 43, 0.24)),
     url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1600&q=80');
   background-size: cover;
