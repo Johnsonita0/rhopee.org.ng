@@ -17,7 +17,9 @@ function App() {
   const [scannedMemberData, setScannedMemberData] = useState(null);
   const [routeMode, setRouteMode] = useState(() => {
     if (typeof window === 'undefined') return 'app';
-    return window.location.pathname.toLowerCase() === '/verifyme' ? 'verify' : 'app';
+    const path = window.location.pathname.toLowerCase();
+    if (path === '/verifyme') return 'verify';
+    return 'app';
   });
 
   const readVerificationDataFromLocation = () => {
@@ -232,7 +234,7 @@ function App() {
 
       setRouteMode('app');
 
-      if (currentHash === '#register') {
+      if (currentPath === '/register') {
         setPage('register');
       } else if (currentHash === '#more' || ['#gallery', '#news', '#contact'].includes(currentHash)) {
         setPage('more');

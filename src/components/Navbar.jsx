@@ -45,6 +45,11 @@ function Navbar({ activePage, onNavigate }) {
     function handleResize() {
       if (userToggled) return;
       const w = window.innerWidth;
+      if (w <= 840) {
+        setCollapsed(false);
+        setMenuOpen(false);
+        return;
+      }
       setCollapsed(w < AUTO_COLLAPSE_PX);
     }
 
@@ -93,17 +98,6 @@ function Navbar({ activePage, onNavigate }) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6"/><path d="M19 12a7 7 0 10-14 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </span>
           <span className="link-text">More</span>
-        </button>
-        <button
-          type="button"
-          className={activePage === 'register' ? 'active' : ''}
-          onClick={() => goToPage('register')}
-          title="Register"
-        >
-          <span className="nav-icon" aria-hidden>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><path d="M5 12h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-          </span>
-          <span className="link-text">Register</span>
         </button>
       </div>
       <button
