@@ -137,8 +137,10 @@ function SuccessPage({ data }) {
               <QRCodeSVG
                 value={qrData}
                 level="H"
-                size={220}
-                includeMargin={false}
+                size={240}
+                includeMargin={true}
+                bgColor="#ffffff"
+                fgColor="#0f5f2b"
               />
             </div>
           </div>
