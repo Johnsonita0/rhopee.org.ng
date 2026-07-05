@@ -1,7 +1,7 @@
 import '../css/pages/SuccessPage.css';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
-import { buildScannableQrValue } from '../lib/verificationPayload.js';
+import { encodeVerificationPayload } from '../lib/verificationPayload.js';
 
 function SuccessPage({ data }) {
   const qrCodeRef = useRef();
@@ -18,11 +18,7 @@ function SuccessPage({ data }) {
   };
 
   const qrSize = 200;
-  const qrData = buildScannableQrValue({
-    barcode: data.barcode,
-    membershipId: data.membership_id || data.membershipId,
-    id: data.id,
-  }) || `${window.location.origin}/verifyme?data=${encodeURIComponent(JSON.stringify(qrPayload))}`;
+  const qrData = `${window.location.origin}/verifyme?data=${encodeVerificationPayload(qrPayload)}`;
 
   // Download QR code as PNG
   const downloadQRCode = () => {
