@@ -43,8 +43,8 @@
 }
 
 .success-icon {
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   margin: 0 auto 10px;
   border-radius: 50%;
   background: linear-gradient(135deg, #0f5f2b, #1a7a3a);
@@ -52,19 +52,12 @@
   font-size: 2rem;
   display: grid;
   place-items: center;
-  box-shadow: 0 12px 30px rgba(15, 95, 43, 0.24);
-  animation: checkPop 0.7s ease-out both;
+  box-shadow: 0 14px 34px rgba(15, 95, 43, 0.24);
+  animation: checkPop 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  position: relative;
+  overflow: hidden;
 }
 
-.success-icon::after {
-  content: '';
-  width: 26px;
-  height: 14px;
-  border-left: 3px solid white;
-  border-bottom: 3px solid white;
-  transform: rotate(-45deg) translate(1px, -1px);
-  animation: drawCheck 0.5s ease-out 0.2s both;
-}
 
 .verification-message h2 {
   margin: 0;
@@ -123,6 +116,10 @@
 }
 
 .detail-value {
+  text-transform: uppercase;
+}
+
+.detail-value {
   color: #103a23;
   font-weight: 700;
   word-break: break-word;
@@ -151,14 +148,19 @@
 }
 
 @keyframes checkPop {
-  0% { transform: scale(0.84); opacity: 0; }
-  70% { transform: scale(1.05); opacity: 1; }
+  0% { transform: scale(0.82); opacity: 0; }
+  60% { transform: scale(1.04); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes drawCheck {
-  0% { opacity: 0; transform: rotate(-45deg) translate(1px, -1px) scale(0.7); }
+  0% { opacity: 0; transform: rotate(-45deg) translate(2px, -2px) scale(0.7); }
   100% { opacity: 1; transform: rotate(-45deg) translate(1px, -1px) scale(1); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(140%); }
 }
 
 @media (max-width: 700px) {

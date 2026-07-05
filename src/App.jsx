@@ -43,15 +43,33 @@ function App() {
     return null;
   };
 
-  const openVerificationInBrowser = (memberData) => {
-    sessionStorage.setItem('pendingVerificationData', JSON.stringify(memberData));
+  const normalizeVerificationPayload = (memberData, fallbackOutcome = 'verified', fallbackReason = '') => {
+    const derivedOutcome = memberData?.outcome || memberData?.verificationState || fallbackOutcome;
+    const derivedStatus = memberData?.status || (derivedOutcome === 'expired' ? 'Expired' : derivedOutcome === 'invalid' ? 'Invalid' : 'Verified');
 
-    const encodedData = encodeVerificationPayload(memberData);
+    return {
+      name: memberData?.name || '',
+      tag: memberData?.tag || '',
+      membershipId: memberData?.membershipId || memberData?.membership_id || '',
+      chapter: memberData?.chapter || '',
+      issuedAt: memberData?.issuedAt || memberData?.issued_at || '',
+      expiresAt: memberData?.expiresAt || memberData?.expires_at || '',
+      status: derivedStatus,
+      outcome: derivedOutcome,
+      reason: memberData?.reason || fallbackReason,
+    };
+  };
+
+  const openVerificationInBrowser = (memberData) => {
+    const payload = normalizeVerificationPayload(memberData);
+    sessionStorage.setItem('pendingVerificationData', JSON.stringify(payload));
+
+    const encodedData = encodeVerificationPayload(payload);
     const verificationUrl = `${window.location.origin}/verifyme?data=${encodedData}`;
     const popup = window.open(verificationUrl, '_blank', 'width=980,height=760,noopener,noreferrer');
 
     if (!popup) {
-      setScannedMemberData(memberData);
+      setScannedMemberData(payload);
       setRouteMode('verify');
       setPage('verification');
     }
@@ -75,7 +93,7 @@ function App() {
       if (parsedUrl.pathname.toLowerCase().includes('/verifyme')) {
         const encodedData = parsedUrl.searchParams.get('data');
         if (encodedData) {
-          return JSON.parse(decodeURIComponent(encodedData));
+          return decodeVerificationPayload(encodedData);
         }
       }
     } catch (error) {
@@ -95,18 +113,9 @@ function App() {
       const memberData = parseScannedPayload(code);
 
       if (memberData && (memberData.membershipId || memberData.membership_id)) {
-        const payload = {
-          name: memberData.name,
-          tag: memberData.tag,
-          membershipId: memberData.membershipId,
-          chapter: memberData.chapter,
-          issuedAt: memberData.issuedAt,
-          expiresAt: memberData.expiresAt,
-          status: memberData.status,
-        };
+        const payload = normalizeVerificationPayload(memberData);
 
         setScannedMemberData(payload);
-
         openVerificationInBrowser(payload);
 
         setLoading(false);
@@ -118,14 +127,48 @@ function App() {
 
       if (queryError) {
         console.error('Supabase query error:', queryError);
+        const invalidPayload = normalizeVerificationPayload(
+          {
+            name: 'Unrecognized QR code',
+            tag: 'Unknown',
+            status: 'Invalid',
+            reason: 'Unable to verify this ID code.',
+          },
+          'invalid',
+          'Unable to verify this ID code.'
+        );
+        setScannedMemberData(invalidPayload);
+        openVerificationInBrowser(invalidPayload);
         setError('Unable to verify this ID code.');
         return;
       }
 
       if (!data) {
+        const invalidPayload = normalizeVerificationPayload(
+          {
+            name: 'Unrecognized QR code',
+            tag: 'Unknown',
+            status: 'Invalid',
+            reason: 'No matching ID record found.',
+          },
+          'invalid',
+          'No matching ID record found.'
+        );
+        setScannedMemberData(invalidPayload);
+        openVerificationInBrowser(invalidPayload);
         setError('No matching ID record found.');
         return;
       }
+
+      const payload = normalizeVerificationPayload({
+        name: data.name,
+        tag: data.tag || data.position || 'Member',
+        membershipId: data.membership_id,
+        chapter: data.chapter,
+        status: data.status,
+        issuedAt: data.issued_at ?? 'Unknown',
+        expiresAt: data.expires_at ?? 'Unknown',
+      });
 
       setVerificationResult({
         id: data.id,
@@ -138,6 +181,8 @@ function App() {
         expiresAt: data.expires_at ?? 'Unknown',
         barcode: code,
       });
+      setScannedMemberData(payload);
+      openVerificationInBrowser(payload);
     } catch (e) {
       console.error('Verification error:', e);
       setError('Unable to verify this ID code.');

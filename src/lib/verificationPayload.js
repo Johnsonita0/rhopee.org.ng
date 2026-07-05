@@ -7,6 +7,8 @@ const encodeVerificationPayload = (memberData) => {
     i: memberData?.issuedAt || memberData?.issued_at || '',
     e: memberData?.expiresAt || memberData?.expires_at || '',
     s: memberData?.status || 'verified',
+    o: memberData?.outcome || 'verified',
+    r: memberData?.reason || '',
   };
 
   const payloadText = JSON.stringify(compactPayload);
@@ -49,6 +51,8 @@ const decodeVerificationPayload = (value) => {
       issuedAt: parsed.i,
       expiresAt: parsed.e,
       status: parsed.s,
+      outcome: parsed.o,
+      reason: parsed.r,
     };
   } catch (error) {
     return null;
