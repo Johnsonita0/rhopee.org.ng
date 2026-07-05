@@ -214,13 +214,17 @@ function RegistrationPage() {
         </label>
 
         {uploadError && (
-          <details className="debug-panel">
-            <summary>Passport upload failed — debug info (click to expand)</summary>
-            <pre style={{ whiteSpace: 'pre-wrap', fontSize: '12px' }}>
-              {JSON.stringify(uploadError, null, 2)}
-            </pre>
-            <p>The image will be saved inline in the database as a fallback.</p>
-          </details>
+          import.meta.env.DEV ? (
+            <details className="debug-panel">
+              <summary>Passport upload failed — debug info (dev only)</summary>
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '12px' }}>
+                {JSON.stringify(uploadError, null, 2)}
+              </pre>
+              <p>The image will be saved inline in the database as a fallback.</p>
+            </details>
+          ) : (
+            <p className="form-error">Passport upload failed; image saved inline as fallback.</p>
+          )
         )}
 
         {error && <p className="form-error">{error}</p>}
