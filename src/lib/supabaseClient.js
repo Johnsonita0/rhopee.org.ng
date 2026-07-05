@@ -51,6 +51,36 @@ export async function uploadPassportFile(file, membershipId) {
   const filename = `${membershipId || 'member'}-${Date.now()}.${fileExt}`;
   const path = filename;
 
+  // If server-side signed upload endpoint is enabled, POST base64 to it.
+  const useServer = import.meta.env.VITE_USE_SERVER_UPLOAD === 'true';
+  if (useServer) {
+    try {
+      // read file as data URL
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const resp = await fetch('/api/upload-passport', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ membershipId, filename: path, dataUrl }),
+      });
+
+      const json = await resp.json();
+      if (!resp.ok) {
+        console.error('Server upload failed', json);
+        return { publicUrl: null, error: json, context: { bucket, path } };
+      }
+      return { publicUrl: json.publicUrl || null };
+    } catch (err) {
+      console.error('Server upload exception', { err, bucket, path });
+      return { publicUrl: null, error: err, context: { bucket, path } };
+    }
+  }
+
   try {
     const { data: uploadData, error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
       cacheControl: '3600',
