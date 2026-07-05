@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import './VerificationPage.css';
+import '../css/pages/VerificationPage.css';
 
 function VerificationPage({ memberData, onBackToScan }) {
   const [isExpired, setIsExpired] = useState(false);

@@ -1,0 +1,60 @@
+.app-shell {
+  width: 100%;
+  margin: 0;
+  padding: 24px 18px 36px;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-content {
+  display: grid;
+  gap: 24px;
+  margin-top: 18px;
+  width: 100%;
+}
+
+.section-block,
+.hero-card {
+  padding: 22px;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 16px 44px rgba(15, 95, 43, 0.07);
+}
+
+.hero-card h2 {
+  margin-top: 0;
+  color: var(--brand-dark);
+}
+
+.hero-card p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+@media (max-width: 840px) {
+  .app-shell {
+    padding: 16px 12px 28px;
+  }
+
+  .page-content {
+    gap: 16px;
+  }
+
+  .section-block,
+  .hero-card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+}
+
+@media (min-width: 841px) {
+  .app-shell {
+    padding-left: 260px;
+  }
+}
+
+.nav-collapsed .app-shell {
+  padding-left: 120px;
+}

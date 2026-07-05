@@ -1,4 +1,4 @@
-import './ResultCard.css';
+import '../css/components/ResultCard.css';
 
 function ResultCard({ scannedCode, result, loading, error }) {
   return (

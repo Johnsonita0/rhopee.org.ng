@@ -1,4 +1,4 @@
-import './SuccessPage.css';
+import '../css/pages/SuccessPage.css';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
 

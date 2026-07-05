@@ -1,0 +1,31 @@
+.app-header {
+  display: grid;
+  gap: 16px;
+  padding: 36px;
+  border-radius: 32px;
+  background: radial-gradient(circle at top left, #0f5f2b 0%, #0b3f1d 72%);
+  color: #ffffff;
+  box-shadow: 0 30px 90px rgba(15, 95, 43, 0.2);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  opacity: 0.9;
+  color: #d7f0d9;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 4vw, 3.6rem);
+  line-height: 1.02;
+}
+
+.header-note {
+  margin: 0;
+  max-width: 760px;
+  opacity: 0.86;
+  line-height: 1.7;
+}

@@ -1,4 +1,4 @@
-import './VerificationStatusPage.css';
+import '../css/pages/VerificationStatusPage.css';
 
 function VerificationStatusPage({ memberData, onClose }) {
   const formatDisplayValue = (value) => {
@@ -13,20 +13,32 @@ function VerificationStatusPage({ memberData, onClose }) {
     return String(value);
   };
 
-  const formatDateValue = (value) => {
-    if (!value) return 'Not provided';
-
-    const parsedDate = new Date(value);
-    if (Number.isNaN(parsedDate.getTime())) {
-      return formatDisplayValue(value);
+  const getStatusTone = () => {
+    if (!memberData?.expiresAt) {
+      return 'success';
     }
 
-    return parsedDate.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    const expiryDate = new Date(memberData.expiresAt);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (Number.isNaN(expiryDate.getTime())) {
+      return 'success';
+    }
+
+    if (expiryDate < today) {
+      return 'danger';
+    }
+
+    const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+    if (daysLeft <= 30) {
+      return 'warning';
+    }
+
+    return 'success';
   };
+
+  const stateTone = getStatusTone();
 
   if (!memberData) {
     return (
@@ -40,19 +52,16 @@ function VerificationStatusPage({ memberData, onClose }) {
   }
 
   const detailItems = [
-    { label: 'Membership ID', value: formatDisplayValue(memberData.membershipId) },
-    { label: 'Tag/Position', value: formatDisplayValue(memberData.tag || 'Member') },
-    { label: 'Chapter', value: formatDisplayValue(memberData.chapter) },
+    { label: 'Name', value: formatDisplayValue(memberData.name) },
     { label: 'Status', value: formatDisplayValue(memberData.status || 'Verified') },
-    { label: 'Issued Date', value: formatDateValue(memberData.issuedAt) },
-    { label: 'Expiration Date', value: formatDateValue(memberData.expiresAt) },
+    { label: 'Membership No.', value: formatDisplayValue(memberData.membershipId) },
   ];
 
   return (
     <section className="verification-status-page">
-      <div className="status-container">
+      <div className={`status-container ${stateTone}`}>
         <div className="verification-message">
-          <div className="success-icon">✓</div>
+          <div className="success-icon" aria-hidden="true">✓</div>
           <h2>
             <span className="member-name">{formatDisplayValue(memberData.name)}</span>
             <span className="is-verified"> is a verified member of</span>

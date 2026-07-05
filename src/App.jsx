@@ -5,7 +5,7 @@ import MorePage from './pages/MorePage.jsx';
 import RegistrationPage from './pages/RegistrationPage.jsx';
 import VerificationStatusPage from './pages/VerificationStatusPage.jsx';
 import { verifyIdCode } from './lib/supabaseClient.js';
-import './App.css';
+import './css/App.css';
 import { decodeVerificationPayload, encodeVerificationPayload } from './lib/verificationPayload.js';
 
 function App() {

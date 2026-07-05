@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './Scanner.css';
+import '../css/components/Scanner.css';
 
 function Scanner({ onScan }) {
   const [inputValue, setInputValue] = useState('');

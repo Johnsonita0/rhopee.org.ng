@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import SuccessPage from './SuccessPage.jsx';
 import { registerMember } from '../lib/supabaseClient.js';
-import './RegistrationPage.css';
+import '../css/pages/RegistrationPage.css';
 
 const localGovernments = [
   'Abak',
@@ -68,7 +68,18 @@ function RegistrationPage() {
   const [successData, setSuccessData] = useState(null);
 
   const updateField = (field) => (event) => {
-    setForm((current) => ({ ...current, [field]: event.target.value }));
+    const value = event.target.value;
+    setForm((current) => {
+      const nextForm = { ...current, [field]: value };
+
+      if (field === 'issuedAt' && value) {
+        const issuedDate = new Date(value);
+        issuedDate.setFullYear(issuedDate.getFullYear() + 1);
+        nextForm.expiresAt = issuedDate.toISOString().split('T')[0];
+      }
+
+      return nextForm;
+    });
   };
 
   // No file input in the current form
