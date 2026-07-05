@@ -37,7 +37,7 @@ const localGovernments = [
   'Ibesikpo Asutan',
 ];
 
-const positionOptions = [
+const tagOptions = [
   'Chairman',
   'State Excos',
   'Local Government Coordinator',
@@ -47,12 +47,11 @@ const positionOptions = [
 const initialForm = {
   fullName: '',
   membershipId: '',
-  position: 'Member',
+  tag: 'Member',
   chapter: 'AKWA IBOM STATE CHAPTER',
   localGovernment: 'Uyo',
   issuedAt: '',
   expiresAt: '',
-  
 };
 
 function generateBarcodeValue(chapter) {
@@ -91,7 +90,7 @@ function RegistrationPage() {
     const payload = {
       name: form.fullName,
       membership_id: form.membershipId,
-      position: form.position,
+      tag: form.tag,
       chapter: form.chapter,
       local_government: form.localGovernment,
       issued_at: form.issuedAt,
@@ -136,10 +135,10 @@ function RegistrationPage() {
         </label>
 
         <label>
-          Position Held
-          <select value={form.position} onChange={updateField('position')}>
-            {positionOptions.map((position) => (
-              <option key={position} value={position}>{position}</option>
+          Member Tag/Position
+          <select value={form.tag} onChange={updateField('tag')}>
+            {tagOptions.map((tag) => (
+              <option key={tag} value={tag}>{tag}</option>
             ))}
           </select>
         </label>

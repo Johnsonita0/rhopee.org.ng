@@ -3,6 +3,7 @@ import Navbar from './components/Navbar.jsx';
 import HomePage from './pages/HomePage.jsx';
 import MorePage from './pages/MorePage.jsx';
 import RegistrationPage from './pages/RegistrationPage.jsx';
+import VerificationPage from './pages/VerificationPage.jsx';
 import { verifyIdCode } from './lib/supabaseClient.js';
 import './App.css';
 
@@ -12,6 +13,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState('home');
+  const [scannedMemberData, setScannedMemberData] = useState(null);
 
   const handleScan = async (code) => {
     setScannedCode(code);
@@ -20,6 +22,32 @@ function App() {
     setLoading(true);
 
     try {
+      // Try parsing as JSON first (QR code data)
+      let memberData = null;
+      try {
+        memberData = JSON.parse(code);
+      } catch (e) {
+        // Not JSON, treat as barcode
+        memberData = null;
+      }
+
+      if (memberData && memberData.membershipId) {
+        // QR code scanned - show verification page
+        setScannedMemberData({
+          name: memberData.name,
+          tag: memberData.tag,
+          membershipId: memberData.membershipId,
+          chapter: memberData.chapter,
+          issuedAt: memberData.issuedAt,
+          expiresAt: memberData.expiresAt,
+          status: memberData.status,
+        });
+        setPage('verification');
+        setLoading(false);
+        return;
+      }
+
+      // Barcode lookup
       const { data, error: queryError } = await verifyIdCode(code);
 
       if (queryError) {
@@ -36,7 +64,7 @@ function App() {
       setVerificationResult({
         id: data.id,
         name: data.name,
-        position: data.position,
+        tag: data.tag || data.position,
         membershipId: data.membership_id,
         chapter: data.chapter,
         status: data.status,
@@ -50,6 +78,11 @@ function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBackToScan = () => {
+    setScannedMemberData(null);
+    setPage('home');
   };
 
   useEffect(() => {
@@ -81,6 +114,12 @@ function App() {
           loading={loading}
           error={error}
           onScan={handleScan}
+        />
+      )}
+      {page === 'verification' && (
+        <VerificationPage
+          memberData={scannedMemberData}
+          onBackToScan={handleBackToScan}
         />
       )}
       {page === 'more' && <MorePage />}

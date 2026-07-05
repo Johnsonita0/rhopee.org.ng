@@ -16,7 +16,7 @@ function ResultCard({ scannedCode, result, loading, error }) {
         <div className="result-details">
           <p><strong>Scanned Code:</strong> {scannedCode}</p>
           <p><strong>Name:</strong> {result.name}</p>
-          <p><strong>Position:</strong> {result.position || 'Member'}</p>
+          <p><strong>Tag/Position:</strong> {result.tag || result.position || 'Member'}</p>
           <p><strong>Chapter:</strong> {result.chapter || 'N/A'}</p>
           <p><strong>Membership ID:</strong> {result.membershipId || 'N/A'}</p>
           <p><strong>ID Status:</strong> {result.status}</p>
