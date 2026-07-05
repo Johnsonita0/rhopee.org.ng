@@ -15,6 +15,18 @@ function App() {
   const [page, setPage] = useState('home');
   const [scannedMemberData, setScannedMemberData] = useState(null);
 
+  const openVerificationInBrowser = (memberData) => {
+    sessionStorage.setItem('pendingVerificationData', JSON.stringify(memberData));
+
+    const verificationUrl = `${window.location.origin}${window.location.pathname}#verify-status`;
+    const popup = window.open(verificationUrl, '_blank', 'width=980,height=760,noopener,noreferrer');
+
+    if (!popup) {
+      setScannedMemberData(memberData);
+      setPage('verification');
+    }
+  };
+
   const handleScan = async (code) => {
     setScannedCode(code);
     setVerificationResult(null);
@@ -32,8 +44,7 @@ function App() {
       }
 
       if (memberData && memberData.membershipId) {
-        // QR code scanned - show verification page
-        setScannedMemberData({
+        const payload = {
           name: memberData.name,
           tag: memberData.tag,
           membershipId: memberData.membershipId,
@@ -41,8 +52,12 @@ function App() {
           issuedAt: memberData.issuedAt,
           expiresAt: memberData.expiresAt,
           status: memberData.status,
-        });
-        setPage('verification');
+        };
+
+        setScannedMemberData(payload);
+
+        openVerificationInBrowser(payload);
+
         setLoading(false);
         return;
       }
@@ -81,8 +96,13 @@ function App() {
   };
 
   const handleBackToScan = () => {
+    sessionStorage.removeItem('pendingVerificationData');
     setScannedMemberData(null);
     setPage('home');
+
+    if (window.location.hash === '#verify-status') {
+      window.location.hash = '';
+    }
   };
 
   useEffect(() => {
@@ -93,6 +113,18 @@ function App() {
         setPage('register');
       } else if (currentHash === '#more' || ['#gallery', '#news', '#contact'].includes(currentHash)) {
         setPage('more');
+      } else if (currentHash === '#verify-status') {
+        const pendingData = sessionStorage.getItem('pendingVerificationData');
+        if (pendingData) {
+          try {
+            setScannedMemberData(JSON.parse(pendingData));
+          } catch (error) {
+            console.error('Unable to restore verification data:', error);
+          }
+          setPage('verification');
+        } else {
+          setPage('home');
+        }
       } else {
         setPage('home');
       }
