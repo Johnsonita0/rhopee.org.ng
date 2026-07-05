@@ -50,8 +50,8 @@ function VerificationStatusPage({ memberData, onClose }) {
   };
 
   const stateTone = getStatusTone();
-  const isInvalidState = String(memberData?.outcome || '').toLowerCase() === 'invalid' || String(memberData?.status || '').toLowerCase() === 'invalid';
-  const isExpiredState = String(memberData?.outcome || '').toLowerCase() === 'expired' || String(memberData?.status || '').toLowerCase() === 'expired';
+  const isInvalidState = ['invalid', 'unrecognized', 'not found'].includes(String(memberData?.outcome || '').toLowerCase()) || ['invalid', 'unrecognized', 'not found'].includes(String(memberData?.status || '').toLowerCase());
+  const isExpiredState = ['expired'].includes(String(memberData?.outcome || '').toLowerCase()) || ['expired'].includes(String(memberData?.status || '').toLowerCase()) || (memberData?.expiresAt && new Date(memberData.expiresAt) < new Date(new Date().setHours(0, 0, 0, 0)));
 
   if (!memberData) {
     return (

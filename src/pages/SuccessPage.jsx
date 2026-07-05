@@ -133,10 +133,18 @@ function SuccessPage({ data }) {
               <QRCodeSVG
                 value={qrData}
                 level="H"
-                size={240}
+                size={260}
                 includeMargin={true}
                 bgColor="#ffffff"
                 fgColor="#0f5f2b"
+                imageSettings={{
+                  src: '/logo/logo1.jpeg',
+                  x: undefined,
+                  y: undefined,
+                  height: 34,
+                  width: 34,
+                  excavate: true,
+                }}
               />
             </div>
           </div>
