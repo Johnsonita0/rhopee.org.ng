@@ -1,9 +1,10 @@
 import './SuccessPage.css';
 import QRCode from 'qrcode.react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 function SuccessPage({ data }) {
   const qrRef = useRef();
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Create QR code data - encodes member information for verification
   const qrData = JSON.stringify({
@@ -16,12 +17,41 @@ function SuccessPage({ data }) {
   });
 
   // Download QR code
-  const downloadQRCode = () => {
-    const url = qrRef.current.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.download = `member-qr-${data.membership_id || data.membershipId}.png`;
-    link.href = url;
-    link.click();
+  const downloadQRCode = async () => {
+    try {
+      setIsDownloading(true);
+      const element = qrRef.current.querySelector('svg');
+      if (!element) {
+        console.error('QR code SVG not found');
+        return;
+      }
+
+      // Convert SVG to canvas then to PNG
+      const svgData = new XMLSerializer().serializeToString(element);
+      const canvas = document.createElement('canvas');
+      const img = new Image();
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+
+        const pngUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `member-qr-${data.membership_id || data.membershipId}.png`;
+        link.href = pngUrl;
+        link.click();
+        setIsDownloading(false);
+      };
+
+      img.src = url;
+    } catch (error) {
+      console.error('Error downloading QR code:', error);
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -65,21 +95,25 @@ function SuccessPage({ data }) {
           </div>
         </div>
 
-        <div className="qr-code-panel">
+        <div className="qr-code-panel" ref={qrRef}>
           <h3>Member Verification QR Code</h3>
           <div className="qr-code-container">
             <QRCode
-              ref={qrRef}
               value={qrData}
               level="H"
               size={256}
               includeMargin={true}
-              renderAs="canvas"
+              renderAs="svg"
+              quietZone={10}
             />
           </div>
           <p className="qr-label">Scan this QR code to verify member details</p>
-          <button className="download-qr-btn" onClick={downloadQRCode}>
-            Download QR Code
+          <button 
+            className="download-qr-btn" 
+            onClick={downloadQRCode}
+            disabled={isDownloading}
+          >
+            {isDownloading ? 'Downloading...' : 'Download QR Code'}
           </button>
         </div>
 
