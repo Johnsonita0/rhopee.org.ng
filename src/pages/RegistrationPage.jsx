@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import SuccessPage from './SuccessPage.jsx';
-import { registerMember, uploadPassportFile } from '../lib/supabaseClient.js';
+import { registerMember } from '../lib/supabaseClient.js';
 import './RegistrationPage.css';
 
 const localGovernments = [
@@ -52,8 +52,7 @@ const initialForm = {
   localGovernment: 'Uyo',
   issuedAt: '',
   expiresAt: '',
-  passportFile: null,
-  passportPreview: '',
+  
 };
 
 function generateBarcodeValue(chapter) {
@@ -66,35 +65,20 @@ function RegistrationPage() {
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
-  const [uploadError, setUploadError] = useState(null);
+  
   const [successData, setSuccessData] = useState(null);
 
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
   };
 
-  const handleFileChange = (event) => {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setForm((current) => ({ ...current, passportFile: file, passportPreview: reader.result }));
-    };
-    reader.readAsDataURL(file);
-  };
+  // No file input in the current form
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
 
-    if (
-      !form.fullName.trim() ||
-      !form.membershipId.trim() ||
-      !form.passportPreview ||
-      !form.issuedAt ||
-      !form.expiresAt
-    ) {
+    if (!form.fullName.trim() || !form.membershipId.trim() || !form.issuedAt || !form.expiresAt) {
       setError('Please complete all required fields.');
       return;
     }
@@ -103,31 +87,13 @@ function RegistrationPage() {
 
     const barcode = generateBarcodeValue(form.chapter);
 
-    // Upload passport file to storage (if present) and use returned public URL
-    let passport_url = null;
-    let fallback_passport_data = null;
-    setUploadError(null);
-
-    if (form.passportFile) {
-      const res = await uploadPassportFile(form.passportFile, form.membershipId || form.fullName);
-      if (res?.error) {
-        // record error for debug panel and fallback to base64 storage in DB
-        console.warn('Upload failed, falling back to DB storage', res);
-        setUploadError(res);
-        fallback_passport_data = form.passportPreview;
-      } else {
-        passport_url = res?.publicUrl || null;
-      }
-    }
-
+    
     const payload = {
       name: form.fullName,
       membership_id: form.membershipId,
       position: form.position,
       chapter: form.chapter,
       local_government: form.localGovernment,
-      passport_url,
-      passport_data: fallback_passport_data,
       issued_at: form.issuedAt,
       expires_at: form.expiresAt,
       barcode,
@@ -192,16 +158,7 @@ function RegistrationPage() {
           </select>
         </label>
 
-        <label>
-          Passport photo
-          <input type="file" accept="image/*" onChange={handleFileChange} />
-        </label>
-
-        {form.passportPreview && (
-          <div className="image-preview">
-            <img src={form.passportPreview} alt="Passport preview" />
-          </div>
-        )}
+        
 
         <label>
           Date Issued
@@ -213,19 +170,7 @@ function RegistrationPage() {
           <input type="date" value={form.expiresAt} onChange={updateField('expiresAt')} />
         </label>
 
-        {uploadError && (
-          import.meta.env.DEV ? (
-            <details className="debug-panel">
-              <summary>Passport upload failed — debug info (dev only)</summary>
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '12px' }}>
-                {JSON.stringify(uploadError, null, 2)}
-              </pre>
-              <p>The image will be saved inline in the database as a fallback.</p>
-            </details>
-          ) : (
-            <p className="form-error">Passport upload failed; image saved inline as fallback.</p>
-          )
-        )}
+        
 
         {error && <p className="form-error">{error}</p>}
 

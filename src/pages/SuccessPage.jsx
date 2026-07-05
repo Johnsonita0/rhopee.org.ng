@@ -31,20 +31,7 @@ function SuccessPage({ data }) {
             <strong>Local Government</strong>
             <p>{data.local_government || data.localGovernment}</p>
           </div>
-          <div>
-            <strong>Passport</strong>
-            {data.passport_url ? (
-              <div className="success-passport-wrap">
-                <img src={data.passport_url} alt="Passport" className="success-passport" />
-              </div>
-            ) : data.passport_data ? (
-              <div className="success-passport-wrap">
-                <img src={data.passport_data} alt="Passport" className="success-passport" />
-              </div>
-            ) : (
-              <p>{data.passport_name || 'N/A'}</p>
-            )}
-          </div>
+          
           <div>
             <strong>Issued</strong>
             <p>{data.issued_at || data.issuedAt}</p>

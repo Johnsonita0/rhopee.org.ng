@@ -93,16 +93,3 @@
   }
 }
 
-.success-passport-wrap {
-  display: flex;
-  justify-content: center;
-  padding: 8px;
-}
-
-.success-passport {
-  max-width: 320px;
-  max-height: 420px;
-  object-fit: contain;
-  border-radius: 8px;
-  border: 1px solid rgba(0,0,0,0.06);
-}
