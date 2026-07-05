@@ -58,7 +58,7 @@ function VerificationStatusPage({ memberData, onClose }) {
             <span className="is-verified"> is a verified member of</span>
             <span className="rhopee-text"> RHOPEE</span>
           </h2>
-          <p className="status-subtitle">The scanned QR details are shown below in a clear, readable format.</p>
+          <p className="status-subtitle">This is to inform you that the holder of this ID is a verified member of RHOPEE.</p>
         </div>
 
         <div className="details-card">
