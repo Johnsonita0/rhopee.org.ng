@@ -19,6 +19,7 @@ function SuccessPage({ data }) {
 
   const qrSize = 200;
   const qrData = `${window.location.origin}/verifyme?data=${encodeVerificationPayload(qrPayload)}`;
+  const qrLinkLabel = qrData.replace(/^https?:\/\//, '').split('/')[0];
 
   // Download QR code as PNG
   const downloadQRCode = () => {
@@ -129,6 +130,8 @@ function SuccessPage({ data }) {
           <h3>Member Verification QR Code</h3>
           <div className="qr-code-container" ref={qrCodeRef}>
             <div className="qr-code-frame">
+              <span className="qr-corner-marker qr-corner-marker--top-left">scan</span>
+              <span className="qr-corner-marker qr-corner-marker--bottom-right">{qrLinkLabel}</span>
               <QRCodeSVG
                 value={qrData}
                 level="H"
