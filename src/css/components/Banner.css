@@ -87,11 +87,26 @@
 
 @media (max-width: 760px) {
   .hero-banner {
-    padding: 38px 20px 48px;
+    padding: 32px 18px 40px;
     min-height: unset;
+    border-radius: 22px;
   }
 
   .hero-banner h2 {
-    font-size: 2.6rem;
+    font-size: clamp(2rem, 6vw, 2.6rem);
+  }
+
+  .hero-copy {
+    font-size: 0.96rem;
+  }
+
+  .hero-actions {
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .button {
+    width: 100%;
+    padding: 14px 18px;
   }
 }

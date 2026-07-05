@@ -1,17 +1,19 @@
 .app-shell {
   width: 100%;
-  margin: 0;
-  padding: 24px 18px 36px;
-  max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
+  padding: 28px 22px 40px;
+  max-width: 1480px;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .page-content {
   display: grid;
-  gap: 24px;
-  margin-top: 18px;
+  gap: 28px;
+  margin-top: 20px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .section-block,
@@ -35,11 +37,12 @@
 
 @media (max-width: 840px) {
   .app-shell {
-    padding: 16px 12px 28px;
+    padding: 18px 12px 28px;
   }
 
   .page-content {
-    gap: 16px;
+    gap: 18px;
+    margin-top: 16px;
   }
 
   .section-block,
@@ -57,4 +60,14 @@
 
 .nav-collapsed .app-shell {
   padding-left: 120px;
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    padding: 14px 10px 24px;
+  }
+
+  .page-content {
+    gap: 14px;
+  }
 }

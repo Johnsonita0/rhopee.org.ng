@@ -1,12 +1,12 @@
 import '../css/pages/SuccessPage.css';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
+import { encodeVerificationPayload } from '../lib/verificationPayload.js';
 
 function SuccessPage({ data }) {
   const qrCodeRef = useRef();
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Create a URL-based QR payload so scanners display a clickable link
   const qrPayload = {
     membershipId: data.membership_id || data.membershipId,
     name: data.name || data.fullName,
@@ -17,7 +17,7 @@ function SuccessPage({ data }) {
     status: 'verified'
   };
 
-  const qrData = `${window.location.origin}/verifyme?data=${encodeURIComponent(JSON.stringify(qrPayload))}`;
+  const qrData = `${window.location.origin}/verifyme?data=${encodeVerificationPayload(qrPayload)}`;
 
   // Download QR code as PNG
   const downloadQRCode = () => {
@@ -117,13 +117,15 @@ function SuccessPage({ data }) {
         <div className="qr-code-panel">
           <h3>Member Verification QR Code</h3>
           <div className="qr-code-container">
-            <QRCodeSVG
-              ref={qrCodeRef}
-              value={qrData}
-              level="H"
-              size={256}
-              includeMargin={true}
-            />
+            <div className="qr-code-frame">
+              <QRCodeSVG
+                ref={qrCodeRef}
+                value={qrData}
+                level="H"
+                size={256}
+                includeMargin={true}
+              />
+            </div>
           </div>
           <p className="qr-label">Scan this QR code to verify member details</p>
           <button 

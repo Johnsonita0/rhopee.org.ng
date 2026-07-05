@@ -13,8 +13,9 @@ const encodeVerificationPayload = (memberData) => {
 
   const payloadText = JSON.stringify(compactPayload);
   const encoded = btoa(unescape(encodeURIComponent(payloadText)));
+  const compactEncoded = encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 
-  return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  return encodeURIComponent(compactEncoded);
 };
 
 const decodeVerificationPayload = (value) => {

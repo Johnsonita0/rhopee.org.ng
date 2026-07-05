@@ -4,6 +4,9 @@
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: 0 24px 70px rgba(15, 95, 43, 0.08);
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .scanner-panel h3 {

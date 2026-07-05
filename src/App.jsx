@@ -194,20 +194,24 @@ function App() {
   const handleBackToScan = () => {
     sessionStorage.removeItem('pendingVerificationData');
     setScannedMemberData(null);
+    setVerificationResult(null);
+    setError('');
+    setScannedCode('');
     setPage('home');
 
     if (routeMode === 'verify') {
       if (window.opener) {
         window.close();
       } else {
+        window.history.replaceState({}, '', '/');
         window.location.assign('/');
       }
       return;
     }
 
     if (window.location.hash === '#verify-status' || window.location.pathname.toLowerCase() === '/verifyme') {
-      window.location.hash = '';
       window.history.replaceState({}, '', '/');
+      window.location.assign('/');
     }
   };
 
