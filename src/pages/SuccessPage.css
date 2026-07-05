@@ -113,7 +113,7 @@
   min-height: 290px;
 }
 
-.qr-code-container canvas {
+.qr-code-container svg {
   display: block;
   width: 100% !important;
   height: auto !important;
