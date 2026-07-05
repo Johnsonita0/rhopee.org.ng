@@ -17,6 +17,7 @@ function SuccessPage({ data }) {
     status: 'verified'
   };
 
+  const qrSize = 200;
   const qrData = `${window.location.origin}/verifyme?data=${encodeVerificationPayload(qrPayload)}`;
 
   // Download QR code as PNG
@@ -28,7 +29,7 @@ function SuccessPage({ data }) {
         setIsDownloading(false);
         return;
       }
-      
+
       const svg = qrCodeRef.current.querySelector('svg');
       if (!svg) {
         console.error('SVG element not found');
@@ -36,21 +37,31 @@ function SuccessPage({ data }) {
         return;
       }
 
-      // Convert SVG to canvas
+      const width = parseInt(svg.getAttribute('width') || qrSize, 10) || qrSize;
+      const height = parseInt(svg.getAttribute('height') || qrSize, 10) || qrSize;
+      const scale = 2;
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      const svgData = new XMLSerializer().serializeToString(svg);
-      const img = new Image();
-      const blob = new Blob([svgData], { type: 'image/svg+xml' });
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      const clonedSvg = svg.cloneNode(true);
+      clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clonedSvg.setAttribute('width', width);
+      clonedSvg.setAttribute('height', height);
+      const svgData = new XMLSerializer().serializeToString(clonedSvg);
+      const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
       const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
 
       img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0, width, height);
         URL.revokeObjectURL(url);
 
-        // Download PNG
         const link = document.createElement('a');
         link.download = `member-qr-${data.membership_id || data.membershipId}.png`;
         link.href = canvas.toDataURL('image/png');
@@ -116,14 +127,13 @@ function SuccessPage({ data }) {
 
         <div className="qr-code-panel">
           <h3>Member Verification QR Code</h3>
-          <div className="qr-code-container">
+          <div className="qr-code-container" ref={qrCodeRef}>
             <div className="qr-code-frame">
               <QRCodeSVG
-                ref={qrCodeRef}
                 value={qrData}
                 level="H"
-                size={256}
-                includeMargin={true}
+                size={220}
+                includeMargin={false}
               />
             </div>
           </div>

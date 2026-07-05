@@ -180,6 +180,22 @@
     display: none;
   }
 
+  .top-nav.collapsed {
+    width: 100%;
+    border-right: none;
+  }
+
+  .top-nav.collapsed .brand-button span,
+  .top-nav.collapsed .nav-links button {
+    justify-content: flex-start;
+    padding: 14px 16px;
+  }
+
+  .top-nav.collapsed .nav-links button .link-text {
+    display: inline-block;
+    opacity: 1;
+  }
+
   .nav-backdrop {
     position: fixed;
     inset: 0;
@@ -288,6 +304,12 @@
   cursor: pointer;
   font-size: 18px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.24);
+}
+
+@media (max-width: 840px) {
+  .nav-collapse-toggle {
+    display: none;
+  }
 }
 
 .nav-collapse-toggle:hover { background: rgba(255,255,255,0.1); }

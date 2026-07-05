@@ -43,13 +43,18 @@ function Navbar({ activePage, onNavigate }) {
   // responsive auto-collapse (unless user manually toggled)
   useEffect(() => {
     function handleResize() {
-      if (userToggled) return;
       const w = window.innerWidth;
       if (w <= 840) {
         setCollapsed(false);
+        setUserToggled(false);
         setMenuOpen(false);
         return;
       }
+
+      if (userToggled) {
+        return;
+      }
+
       setCollapsed(w < AUTO_COLLAPSE_PX);
     }
 
@@ -102,7 +107,7 @@ function Navbar({ activePage, onNavigate }) {
       </div>
       <button
         type="button"
-        className={`nav-collapse-toggle ${collapsed ? 'collapsed' : ''}`}
+        className="nav-collapse-toggle"
         onClick={() => {
           setUserToggled(true);
           setCollapsed((c) => !c);
