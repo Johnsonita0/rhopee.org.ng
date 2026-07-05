@@ -57,6 +57,34 @@ function App() {
     }
   };
 
+  const parseScannedPayload = (code) => {
+    const trimmedCode = code?.trim();
+    if (!trimmedCode) return null;
+
+    try {
+      const parsedJson = JSON.parse(trimmedCode);
+      if (parsedJson && (parsedJson.membershipId || parsedJson.membership_id || parsedJson.name)) {
+        return parsedJson;
+      }
+    } catch (error) {
+      // Ignore and try URL parsing below.
+    }
+
+    try {
+      const parsedUrl = new URL(trimmedCode);
+      if (parsedUrl.pathname.toLowerCase().includes('/verifyme')) {
+        const encodedData = parsedUrl.searchParams.get('data');
+        if (encodedData) {
+          return JSON.parse(decodeURIComponent(encodedData));
+        }
+      }
+    } catch (error) {
+      // Ignore invalid URL input.
+    }
+
+    return null;
+  };
+
   const handleScan = async (code) => {
     setScannedCode(code);
     setVerificationResult(null);
@@ -64,16 +92,9 @@ function App() {
     setLoading(true);
 
     try {
-      // Try parsing as JSON first (QR code data)
-      let memberData = null;
-      try {
-        memberData = JSON.parse(code);
-      } catch (e) {
-        // Not JSON, treat as barcode
-        memberData = null;
-      }
+      const memberData = parseScannedPayload(code);
 
-      if (memberData && memberData.membershipId) {
+      if (memberData && (memberData.membershipId || memberData.membership_id)) {
         const payload = {
           name: memberData.name,
           tag: memberData.tag,

@@ -6,8 +6,8 @@ function SuccessPage({ data }) {
   const qrCodeRef = useRef();
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Create QR code data - encodes member information for verification
-  const qrData = JSON.stringify({
+  // Create a URL-based QR payload so scanners display a clickable link
+  const qrPayload = {
     membershipId: data.membership_id || data.membershipId,
     name: data.name || data.fullName,
     tag: data.tag || data.position || 'Member',
@@ -15,7 +15,9 @@ function SuccessPage({ data }) {
     issuedAt: data.issued_at || data.issuedAt,
     expiresAt: data.expires_at || data.expiresAt,
     status: 'verified'
-  });
+  };
+
+  const qrData = `${window.location.origin}/verifyme?data=${encodeURIComponent(JSON.stringify(qrPayload))}`;
 
   // Download QR code as PNG
   const downloadQRCode = () => {
