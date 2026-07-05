@@ -17,7 +17,7 @@ export async function verifyIdCode(code) {
 
   return supabase
     .from('id_cards')
-    .select('id, name, position, membership_id, chapter, status, issued_at, expires_at')
+    .select('id, name, tag, position, membership_id, chapter, status, issued_at, expires_at')
     .eq('barcode', code)
     .limit(1)
     .single();

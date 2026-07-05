@@ -10,7 +10,7 @@ function SuccessPage({ data }) {
   const qrData = JSON.stringify({
     membershipId: data.membership_id || data.membershipId,
     name: data.name || data.fullName,
-    tag: data.tag || data.position,
+    tag: data.tag || data.position || 'Member',
     chapter: data.chapter,
     issuedAt: data.issued_at || data.issuedAt,
     expiresAt: data.expires_at || data.expiresAt,

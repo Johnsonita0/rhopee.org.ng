@@ -64,7 +64,7 @@ function App() {
       setVerificationResult({
         id: data.id,
         name: data.name,
-        tag: data.tag || data.position,
+        tag: data.tag || data.position || 'Member',
         membershipId: data.membership_id,
         chapter: data.chapter,
         status: data.status,
