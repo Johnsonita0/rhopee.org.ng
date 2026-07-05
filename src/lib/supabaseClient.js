@@ -51,32 +51,42 @@ export async function uploadPassportFile(file, membershipId) {
   const filename = `${membershipId || 'member'}-${Date.now()}.${fileExt}`;
   const path = filename;
 
-  // If server-side signed upload endpoint is enabled, POST base64 to it.
+  // If server-side signed upload endpoint is enabled, request a signed URL
+  // from the API and upload the file directly to Supabase Storage.
   const useServer = import.meta.env.VITE_USE_SERVER_UPLOAD === 'true';
   if (useServer) {
     try {
-      // read file as data URL
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      const resp = await fetch('/api/upload-passport', {
+      const resp = await fetch('/api/signed-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ membershipId, filename: path, dataUrl }),
+        body: JSON.stringify({
+          membershipId,
+          filename: path,
+          contentType: file.type || 'application/octet-stream',
+        }),
       });
 
       const json = await resp.json();
-      if (!resp.ok) {
-        console.error('Server upload failed', json);
+      if (!resp.ok || !json?.signedUrl) {
+        console.error('Signed upload request failed', json);
         return { publicUrl: null, error: json, context: { bucket, path } };
       }
+
+      const uploadResp = await fetch(json.signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file,
+      });
+
+      if (!uploadResp.ok) {
+        const uploadText = await uploadResp.text();
+        console.error('Signed upload failed', { status: uploadResp.status, body: uploadText });
+        return { publicUrl: null, error: { message: uploadText || 'Signed upload failed' }, context: { bucket, path } };
+      }
+
       return { publicUrl: json.publicUrl || null };
     } catch (err) {
-      console.error('Server upload exception', { err, bucket, path });
+      console.error('Signed upload exception', { err, bucket, path });
       return { publicUrl: null, error: err, context: { bucket, path } };
     }
   }
