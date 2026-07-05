@@ -3,7 +3,7 @@ import Navbar from './components/Navbar.jsx';
 import HomePage from './pages/HomePage.jsx';
 import MorePage from './pages/MorePage.jsx';
 import RegistrationPage from './pages/RegistrationPage.jsx';
-import VerificationPage from './pages/VerificationPage.jsx';
+import VerificationStatusPage from './pages/VerificationStatusPage.jsx';
 import { verifyIdCode } from './lib/supabaseClient.js';
 import './App.css';
 
@@ -117,9 +117,9 @@ function App() {
         />
       )}
       {page === 'verification' && (
-        <VerificationPage
+        <VerificationStatusPage
           memberData={scannedMemberData}
-          onBackToScan={handleBackToScan}
+          onClose={handleBackToScan}
         />
       )}
       {page === 'more' && <MorePage />}
