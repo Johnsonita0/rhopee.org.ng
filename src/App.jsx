@@ -14,15 +14,45 @@ function App() {
   const [error, setError] = useState('');
   const [page, setPage] = useState('home');
   const [scannedMemberData, setScannedMemberData] = useState(null);
+  const [routeMode, setRouteMode] = useState(() => {
+    if (typeof window === 'undefined') return 'app';
+    return window.location.pathname.toLowerCase() === '/verifyme' ? 'verify' : 'app';
+  });
+
+  const readVerificationDataFromLocation = () => {
+    const params = new URLSearchParams(window.location.search);
+    const encodedData = params.get('data');
+
+    if (encodedData) {
+      try {
+        return JSON.parse(decodeURIComponent(encodedData));
+      } catch (error) {
+        console.error('Unable to decode verification data:', error);
+      }
+    }
+
+    const pendingData = sessionStorage.getItem('pendingVerificationData');
+    if (pendingData) {
+      try {
+        return JSON.parse(pendingData);
+      } catch (error) {
+        console.error('Unable to restore verification data:', error);
+      }
+    }
+
+    return null;
+  };
 
   const openVerificationInBrowser = (memberData) => {
     sessionStorage.setItem('pendingVerificationData', JSON.stringify(memberData));
 
-    const verificationUrl = `${window.location.origin}${window.location.pathname}#verify-status`;
+    const encodedData = encodeURIComponent(JSON.stringify(memberData));
+    const verificationUrl = `${window.location.origin}/verifyme?data=${encodedData}`;
     const popup = window.open(verificationUrl, '_blank', 'width=980,height=760,noopener,noreferrer');
 
     if (!popup) {
       setScannedMemberData(memberData);
+      setRouteMode('verify');
       setPage('verification');
     }
   };
@@ -100,14 +130,37 @@ function App() {
     setScannedMemberData(null);
     setPage('home');
 
-    if (window.location.hash === '#verify-status') {
+    if (routeMode === 'verify') {
+      if (window.opener) {
+        window.close();
+      } else {
+        window.location.assign('/');
+      }
+      return;
+    }
+
+    if (window.location.hash === '#verify-status' || window.location.pathname.toLowerCase() === '/verifyme') {
       window.location.hash = '';
+      window.history.replaceState({}, '', '/');
     }
   };
 
   useEffect(() => {
-    const updatePageFromHash = () => {
+    const updateRoute = () => {
+      const currentPath = window.location.pathname.toLowerCase();
       const currentHash = window.location.hash.toLowerCase();
+
+      if (currentPath === '/verifyme') {
+        const verificationData = readVerificationDataFromLocation();
+        if (verificationData) {
+          setScannedMemberData(verificationData);
+        }
+        setRouteMode('verify');
+        setPage('verification');
+        return;
+      }
+
+      setRouteMode('app');
 
       if (currentHash === '#register') {
         setPage('register');
@@ -130,11 +183,24 @@ function App() {
       }
     };
 
-    updatePageFromHash();
-    window.addEventListener('hashchange', updatePageFromHash);
+    updateRoute();
+    window.addEventListener('popstate', updateRoute);
+    window.addEventListener('hashchange', updateRoute);
 
-    return () => window.removeEventListener('hashchange', updatePageFromHash);
+    return () => {
+      window.removeEventListener('popstate', updateRoute);
+      window.removeEventListener('hashchange', updateRoute);
+    };
   }, []);
+
+  if (routeMode === 'verify') {
+    return (
+      <VerificationStatusPage
+        memberData={scannedMemberData}
+        onClose={handleBackToScan}
+      />
+    );
+  }
 
   return (
     <div className="app-shell">
