@@ -17,7 +17,6 @@ function SuccessPage({ data }) {
     status: 'verified'
   };
 
-  const qrSize = 200;
   const qrSize = 420;
   const qrData = `${window.location.origin}/verifyme?data=${encodeVerificationPayload(qrPayload)}`;
 
