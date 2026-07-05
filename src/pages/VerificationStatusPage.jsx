@@ -72,14 +72,6 @@ function VerificationStatusPage({ memberData, onClose }) {
           </div>
         </div>
 
-        <div className="json-display">
-          <div className="json-header">
-            <h3>Raw JSON Data</h3>
-            <span>Scanned payload</span>
-          </div>
-          <pre>{JSON.stringify(memberData, null, 2)}</pre>
-        </div>
-
         <div className="action-buttons">
           <button onClick={onClose} className="close-btn">
             Close and return home

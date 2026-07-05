@@ -6,6 +6,7 @@ import RegistrationPage from './pages/RegistrationPage.jsx';
 import VerificationStatusPage from './pages/VerificationStatusPage.jsx';
 import { verifyIdCode } from './lib/supabaseClient.js';
 import './App.css';
+import { decodeVerificationPayload, encodeVerificationPayload } from './lib/verificationPayload.js';
 
 function App() {
   const [scannedCode, setScannedCode] = useState('');
@@ -24,10 +25,9 @@ function App() {
     const encodedData = params.get('data');
 
     if (encodedData) {
-      try {
-        return JSON.parse(decodeURIComponent(encodedData));
-      } catch (error) {
-        console.error('Unable to decode verification data:', error);
+      const decodedData = decodeVerificationPayload(encodedData);
+      if (decodedData) {
+        return decodedData;
       }
     }
 
@@ -46,7 +46,7 @@ function App() {
   const openVerificationInBrowser = (memberData) => {
     sessionStorage.setItem('pendingVerificationData', JSON.stringify(memberData));
 
-    const encodedData = encodeURIComponent(JSON.stringify(memberData));
+    const encodedData = encodeVerificationPayload(memberData);
     const verificationUrl = `${window.location.origin}/verifyme?data=${encodedData}`;
     const popup = window.open(verificationUrl, '_blank', 'width=980,height=760,noopener,noreferrer');
 
