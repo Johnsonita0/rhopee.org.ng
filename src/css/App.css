@@ -5,6 +5,37 @@
   max-width: 1480px;
   box-sizing: border-box;
   overflow-x: hidden;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-main-content {
+  width: 100%;
+  flex: 1;
+}
+
+.app-footer {
+  margin-top: 28px;
+  padding: 18px 0;
+  color: #4c6d55;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 840px) {
+  .app-shell {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 840px) {
+  .app-shell {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }
 
 .page-content {

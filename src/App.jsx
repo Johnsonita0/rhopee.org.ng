@@ -275,23 +275,28 @@ function App() {
   return (
     <div className="app-shell">
       <Navbar activePage={page} onNavigate={setPage} />
-      {page === 'home' && (
-        <HomePage
-          scannedCode={scannedCode}
-          verificationResult={verificationResult}
-          loading={loading}
-          error={error}
-          onScan={handleScan}
-        />
-      )}
-      {page === 'verification' && (
-        <VerificationStatusPage
-          memberData={scannedMemberData}
-          onClose={handleBackToScan}
-        />
-      )}
-      {page === 'more' && <MorePage />}
-      {page === 'register' && <RegistrationPage />}
+      <div className="app-main-content">
+        {page === 'home' && (
+          <HomePage
+            scannedCode={scannedCode}
+            verificationResult={verificationResult}
+            loading={loading}
+            error={error}
+            onScan={handleScan}
+          />
+        )}
+        {page === 'verification' && (
+          <VerificationStatusPage
+            memberData={scannedMemberData}
+            onClose={handleBackToScan}
+          />
+        )}
+        {page === 'more' && <MorePage />}
+        {page === 'register' && <RegistrationPage />}
+      </div>
+      <footer className="app-footer">
+        <p>© {new Date().getFullYear()} RHOPEE. Secure member verification for your organization.</p>
+      </footer>
     </div>
   );
 }
