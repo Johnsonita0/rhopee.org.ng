@@ -87,6 +87,46 @@
   color: #4b5f45;
 }
 
+.barcode-fallback {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid rgba(15, 95, 43, 0.12);
+}
+
+.barcode-fallback__title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f5f2b;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.barcode-fallback__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  min-height: 56px;
+  padding: 8px 0;
+}
+
+.barcode-fallback__bar {
+  display: block;
+  width: 5px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #0f5f2b, #1e7a3d);
+  flex: 1 1 auto;
+}
+
+.barcode-fallback__code {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #3f553c;
+  word-break: break-all;
+}
+
 .qr-code-panel {
   display: grid;
   gap: 14px;

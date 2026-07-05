@@ -1,4 +1,6 @@
-import { compressToBase64, decompressFromBase64 } from 'lz-string';
+import lzString from 'lz-string';
+
+const { compressToBase64, decompressFromBase64 } = lzString;
 
 const SCANNABLE_QR_PREFIX = 'RHOPEE';
 
@@ -22,6 +24,23 @@ const parseScannableQrValue = (value) => {
   return {
     source: 'qr',
     searchValue: trimmedValue.slice(SCANNABLE_QR_PREFIX.length + 1).trim(),
+  };
+};
+
+const buildFallbackBarcodeStyleValue = (memberData) => {
+  const searchValue = memberData?.barcode || memberData?.membershipId || memberData?.membership_id || memberData?.id || '';
+  const trimmedValue = String(searchValue || '').trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  const basePattern = [2, 4, 3, 5];
+  const bars = Array.from({ length: 20 }, (_, index) => basePattern[index % basePattern.length]);
+
+  return {
+    code: trimmedValue,
+    bars,
   };
 };
 
@@ -121,4 +140,4 @@ const decodeVerificationPayload = (value) => {
   }
 };
 
-export { buildScannableQrValue, parseScannableQrValue, encodeVerificationPayload, decodeVerificationPayload };
+export { buildScannableQrValue, parseScannableQrValue, buildFallbackBarcodeStyleValue, encodeVerificationPayload, decodeVerificationPayload };

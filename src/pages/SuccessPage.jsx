@@ -1,7 +1,7 @@
 import '../css/pages/SuccessPage.css';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
-import { encodeVerificationPayload } from '../lib/verificationPayload.js';
+import { buildFallbackBarcodeStyleValue, encodeVerificationPayload } from '../lib/verificationPayload.js';
 
 function SuccessPage({ data }) {
   const qrCodeRef = useRef();
@@ -19,6 +19,7 @@ function SuccessPage({ data }) {
 
   const qrSize = 620;
   const qrData = `${window.location.origin}/verifyme?data=${encodeVerificationPayload(qrPayload)}`;
+  const fallbackBarcode = buildFallbackBarcodeStyleValue(qrPayload);
 
   // Download QR code as PNG
   const downloadQRCode = () => {
@@ -160,6 +161,15 @@ function SuccessPage({ data }) {
 
         <div className="barcode-panel">
           <div className="barcode-placeholder">{data.barcode}</div>
+          <div className="barcode-fallback" aria-label="Fallback scan pattern">
+            <div className="barcode-fallback__title">Printable fallback</div>
+            <div className="barcode-fallback__bars" role="img" aria-label={`Fallback barcode for ${fallbackBarcode?.code || data.barcode}`}>
+              {(fallbackBarcode?.bars || []).map((bar, index) => (
+                <span key={`${bar}-${index}`} className="barcode-fallback__bar" style={{ height: `${bar * 3}px` }} />
+              ))}
+            </div>
+            <div className="barcode-fallback__code">{fallbackBarcode?.code || data.barcode}</div>
+          </div>
           <p className="barcode-label">Scan code to verify this member</p>
         </div>
       </div>
