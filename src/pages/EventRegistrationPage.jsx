@@ -57,19 +57,7 @@ function EventRegistrationPage() {
   const [emailCheckMessage, setEmailCheckMessage] = useState('');
   const [saveStatus, setSaveStatus] = useState('idle');
 
-  const existingRegistrations = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return [];
-    }
-
-    try {
-      const storedValue = window.localStorage.getItem('rhopee_training_registrations');
-      return storedValue ? JSON.parse(storedValue) : [];
-    } catch (error) {
-      console.warn('Unable to read persisted registrations for email check', error);
-      return [];
-    }
-  }, [form.email]);
+  const existingRegistrations = useMemo(() => [], [form.email]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;

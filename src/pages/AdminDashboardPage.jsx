@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import '../css/pages/AdminDashboardPage.css';
 import ConfirmationSlip from '../components/ConfirmationSlip.jsx';
-import { getAllTrainingRegistrations, pushPendingRegistrations } from '../lib/supabaseClient.js';
+import { getAllTrainingRegistrations } from '../lib/supabaseClient.js';
 
 const trackLabels = {
   cinematography: 'Cinematography',
@@ -360,54 +360,18 @@ function AdminDashboardPage({ onLogout }) {
 
     loadRegistrations();
 
-    const handleRegistrationsUpdated = async () => {
-      await syncPendingRegistrations();
-      loadRegistrations();
-    };
-
-    const handleStorageEvent = async (e) => {
-      if (!e) return;
-      // Only refresh when the registrations storage key changes in another tab
-      if (e.key === 'rhopee_training_registrations') {
-        console.log('[AdminDashboard] storage event for registrations detected');
-        await syncPendingRegistrations();
-        await loadRegistrations();
-      }
-    };
-
-    const syncPendingRegistrations = async () => {
-      try {
-        const { pushed, error } = await pushPendingRegistrations();
-        if (error) {
-          console.warn('Pending registration sync failed:', error);
-          setDebugInfo(`sync failed: ${error.message}`);
-          return;
-        }
-
-        if (pushed > 0) {
-          console.log(`[AdminDashboard] pushed ${pushed} pending registrations.`);
-          setDebugInfo(`synced ${pushed} pending registrations`);
+const handleRegistrationsUpdated = () => {
           loadRegistrations();
-        } else {
-          setDebugInfo('no pending registrations to sync');
-        }
-      } catch (syncError) {
-        console.warn('Unable to sync pending registrations:', syncError);
-        setDebugInfo(`sync error: ${syncError.message}`);
-      }
-    };
+        };
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
-      window.addEventListener('storage', handleStorageEvent);
-      syncPendingRegistrations();
+        if (typeof window !== 'undefined') {
+          window.addEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
     }
 
     return () => {
       isMounted = false;
       if (typeof window !== 'undefined') {
         window.removeEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
-        window.removeEventListener('storage', handleStorageEvent);
       }
     };
   }, []);
