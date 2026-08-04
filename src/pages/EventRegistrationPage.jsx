@@ -55,6 +55,7 @@ function EventRegistrationPage() {
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [emailCheckMessage, setEmailCheckMessage] = useState('');
+  const [saveStatus, setSaveStatus] = useState('idle');
 
   const existingRegistrations = useMemo(() => {
     if (typeof window === 'undefined') {
@@ -152,6 +153,7 @@ function EventRegistrationPage() {
       return;
     }
 
+    setSaveStatus('saving');
     setTimeout(async () => {
       try {
         const confirmationCode = generateConfirmationCode();
@@ -184,11 +186,13 @@ function EventRegistrationPage() {
 
         if (error) {
           setStatus('error');
+          setSaveStatus('failed');
           setMessage(error.message || 'This email address has already been used for a registration.');
           return;
         }
 
         setStatus('success');
+        setSaveStatus('completed');
         setSubmitted(true);
         setForm({
           ...form,
@@ -198,6 +202,7 @@ function EventRegistrationPage() {
       } catch (error) {
         console.error('Error saving registration:', error);
         setStatus('error');
+        setSaveStatus('failed');
         setMessage('Unable to save registration to the database. Please try again later.');
       }
     }, 350);
@@ -481,6 +486,14 @@ function EventRegistrationPage() {
               </button>
             )}
           </div>
+
+          {saveStatus !== 'idle' && (
+            <p className={`form-message save-status ${saveStatus}`}>
+              {saveStatus === 'saving' && 'Saving registration to the database...'}
+              {saveStatus === 'completed' && 'Registration saved successfully.'}
+              {saveStatus === 'failed' && 'Registration failed to save. Please check the message above and try again.'}
+            </p>
+          )}
 
           {currentStep === FORM_STEPS.length && message && <p className={status === 'error' ? 'form-error' : 'form-success'}>{message}</p>}
         </form>
