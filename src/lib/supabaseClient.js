@@ -3,57 +3,36 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const missingSupabaseConfig = !supabaseUrl || !supabaseAnonKey;
-const STORAGE_KEY = 'rhopee_training_registrations';
 
 export const ALLOWED_ADMIN_USER_ID = 'a9044df5-bf6b-42be-95d1-1f4337b2ff33';
 
-function getPersistedRegistrations() {
-  if (typeof window === 'undefined') {
-    return [];
-  }
-
-  try {
-    const storedValue = window.localStorage.getItem(STORAGE_KEY);
-    return storedValue ? JSON.parse(storedValue) : [];
-  } catch (error) {
-    console.warn('Unable to read persisted registrations', error);
-    return [];
-  }
-}
-
-function savePersistedRegistrations(registrations) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(registrations));
-}
-
-function notifyRegistrationChange() {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.dispatchEvent(new CustomEvent('rhopee:registrations-updated'));
-}
+export const supabase = missingSupabaseConfig
+  ? null
+  : createClient(supabaseUrl, supabaseAnonKey);
 
 function normalizeEmail(value) {
   return String(value || '').trim().toLowerCase();
 }
 
-function findDuplicateRegistrationByEmail(email) {
+async function findDuplicateRegistrationByEmail(email) {
   const normalizedEmail = normalizeEmail(email);
-  if (!normalizedEmail) {
+  if (!normalizedEmail || missingSupabaseConfig || !supabase) {
     return null;
   }
 
-  const storedRegistrations = getPersistedRegistrations();
-  return storedRegistrations.find((entry) => normalizeEmail(entry.email) === normalizedEmail) || null;
-}
+  const { data, error } = await supabase
+    .from('training_registrations')
+    .select('id, email')
+    .ilike('email', normalizedEmail)
+    .limit(1)
+    .single();
 
-export const supabase = missingSupabaseConfig
-  ? null
-  : createClient(supabaseUrl, supabaseAnonKey);
+  if (error) {
+    return null;
+  }
+
+  return data || null;
+}
 
 export async function verifyIdCode(code) {
   if (missingSupabaseConfig || !supabase) {
@@ -85,13 +64,7 @@ export async function registerMember(member) {
 }
 
 export async function saveTrainingRegistration(registration) {
-  const buildLocalRegistration = (entry) => ({
-    ...entry,
-    id: entry.id || `local-${Date.now()}`,
-    created_at: entry.created_at || new Date().toISOString(),
-  });
-
-  const duplicateRegistration = findDuplicateRegistrationByEmail(registration.email);
+  const duplicateRegistration = await findDuplicateRegistrationByEmail(registration.email);
   if (duplicateRegistration) {
     return {
       data: null,
@@ -100,11 +73,10 @@ export async function saveTrainingRegistration(registration) {
   }
 
   if (missingSupabaseConfig || !supabase) {
-    const nextRegistration = buildLocalRegistration(registration);
-    const storedRegistrations = getPersistedRegistrations();
-    savePersistedRegistrations([nextRegistration, ...storedRegistrations]);
-    notifyRegistrationChange();
-    return { data: nextRegistration, error: null };
+    return {
+      data: null,
+      error: new Error('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'),
+    };
   }
 
   try {
@@ -115,26 +87,11 @@ export async function saveTrainingRegistration(registration) {
       .single();
 
     if (error) {
-      throw error;
+      return { data: null, error };
     }
 
-      // Persist a local copy for quick client-side reads and notify listeners
-      try {
-        const storedRegistrations = getPersistedRegistrations();
-        savePersistedRegistrations([data, ...storedRegistrations]);
-      } catch (persistError) {
-        // ignore local persistence errors
-      }
-
-      notifyRegistrationChange();
-
-      return { data, error: null };
+    return { data, error: null };
   } catch (error) {
-    console.warn('Supabase registration save failed; storing the registration locally instead.', error);
-    const nextRegistration = buildLocalRegistration(registration);
-    const storedRegistrations = getPersistedRegistrations();
-    savePersistedRegistrations([nextRegistration, ...storedRegistrations]);
-    notifyRegistrationChange();
     return {
       data: null,
       error: new Error(

@@ -17,6 +17,7 @@ const trainingRoles = [
 ];
 
 const initialForm = {
+  fullName: '',
   surname: '',
   firstName: '',
   middleName: '',
@@ -42,10 +43,15 @@ const FORM_STEPS = [
 ];
 
 function buildParticipantName(form) {
-  return [form.surname, form.firstName, form.middleName]
+  const nameParts = [form.surname, form.firstName, form.middleName]
     .filter(Boolean)
-    .map((value) => String(value).trim())
-    .join(' ');
+    .map((value) => String(value).trim());
+
+  if (nameParts.length > 0) {
+    return nameParts.join(' ');
+  }
+
+  return String(form.fullName || '').trim();
 }
 
 function EventRegistrationPage() {
@@ -57,19 +63,7 @@ function EventRegistrationPage() {
   const [emailCheckMessage, setEmailCheckMessage] = useState('');
   const [saveStatus, setSaveStatus] = useState('idle');
 
-  const existingRegistrations = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return [];
-    }
-
-    try {
-      const storedValue = window.localStorage.getItem('rhopee_training_registrations');
-      return storedValue ? JSON.parse(storedValue) : [];
-    } catch (error) {
-      console.warn('Unable to read persisted registrations for email check', error);
-      return [];
-    }
-  }, [form.email]);
+  const existingRegistrations = useMemo(() => [], [form.email]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -103,7 +97,7 @@ function EventRegistrationPage() {
   const validateStep = (step) => {
     switch (step) {
       case 1:
-        return form.surname.trim() && form.firstName.trim() && form.email.trim() && form.phone.trim();
+        return form.fullName.trim() && form.email.trim() && form.phone.trim();
       case 2:
         return form.role && form.lga.trim();
       case 3:
