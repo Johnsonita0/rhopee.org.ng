@@ -29,6 +29,14 @@ function savePersistedRegistrations(registrations) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(registrations));
 }
 
+function notifyRegistrationChange() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.dispatchEvent(new CustomEvent('rhopee:registrations-updated'));
+}
+
 export const supabase = missingSupabaseConfig
   ? null
   : createClient(supabaseUrl, supabaseAnonKey);
@@ -63,23 +71,40 @@ export async function registerMember(member) {
 }
 
 export async function saveTrainingRegistration(registration) {
-  if (missingSupabaseConfig || !supabase) {
-    const nextRegistration = {
-      ...registration,
-      id: registration.id || `local-${Date.now()}`,
-      created_at: registration.created_at || new Date().toISOString(),
-    };
+  const buildLocalRegistration = (entry) => ({
+    ...entry,
+    id: entry.id || `local-${Date.now()}`,
+    created_at: entry.created_at || new Date().toISOString(),
+  });
 
+  if (missingSupabaseConfig || !supabase) {
+    const nextRegistration = buildLocalRegistration(registration);
     const storedRegistrations = getPersistedRegistrations();
     savePersistedRegistrations([nextRegistration, ...storedRegistrations]);
+    notifyRegistrationChange();
     return { data: nextRegistration, error: null };
   }
 
-  return supabase
-    .from('training_registrations')
-    .insert(registration)
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('training_registrations')
+      .insert(registration)
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.warn('Supabase registration save failed; storing the registration locally instead.', error);
+    const nextRegistration = buildLocalRegistration(registration);
+    const storedRegistrations = getPersistedRegistrations();
+    savePersistedRegistrations([nextRegistration, ...storedRegistrations]);
+    notifyRegistrationChange();
+    return { data: nextRegistration, error: null };
+  }
 }
 
 export async function signInAdmin(email, password) {

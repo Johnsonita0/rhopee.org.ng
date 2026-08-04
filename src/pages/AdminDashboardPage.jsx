@@ -330,7 +330,12 @@ function AdminDashboardPage({ onLogout }) {
 
         setRegistrations(data || []);
         if (data?.length) {
-          setSelectedRegistration(data[0]);
+          setSelectedRegistration((currentSelection) => {
+            if (currentSelection && data.some((entry) => entry.id === currentSelection.id)) {
+              return currentSelection;
+            }
+            return data[0];
+          });
         }
       } catch (fetchError) {
         if (!isMounted) {
@@ -347,8 +352,19 @@ function AdminDashboardPage({ onLogout }) {
 
     loadRegistrations();
 
+    const handleRegistrationsUpdated = () => {
+      loadRegistrations();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
+    }
+
     return () => {
       isMounted = false;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
+      }
     };
   }, []);
 

@@ -18,7 +18,13 @@ function ConfirmationSlip({ data }) {
     }
   };
   const handlePrint = () => {
-    window.print();
+    document.body.classList.add('printing-confirmation-slip');
+    window.setTimeout(() => {
+      window.print();
+      window.setTimeout(() => {
+        document.body.classList.remove('printing-confirmation-slip');
+      }, 500);
+    }, 50);
   };
 
   const registrationDate = new Date().toLocaleDateString('en-NG', {
