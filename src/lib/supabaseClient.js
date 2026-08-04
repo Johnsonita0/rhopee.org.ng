@@ -10,8 +10,44 @@ export const supabase = missingSupabaseConfig
   ? null
   : createClient(supabaseUrl, supabaseAnonKey);
 
+const LOCAL_REGISTRATIONS_KEY = 'rhopee_training_registrations';
+
 function normalizeEmail(value) {
   return String(value || '').trim().toLowerCase();
+}
+
+function getPersistedRegistrations() {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  try {
+    const storedValue = window.localStorage.getItem(LOCAL_REGISTRATIONS_KEY);
+    return storedValue ? JSON.parse(storedValue) : [];
+  } catch (error) {
+    console.warn('Unable to read persisted registrations', error);
+    return [];
+  }
+}
+
+function savePersistedRegistrations(registrations = []) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(LOCAL_REGISTRATIONS_KEY, JSON.stringify(registrations));
+  } catch (error) {
+    console.warn('Unable to save persisted registrations', error);
+  }
+}
+
+function notifyRegistrationChange() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.dispatchEvent(new CustomEvent('rhopee:registrations-updated'));
 }
 
 async function findDuplicateRegistrationByEmail(email) {
