@@ -197,10 +197,34 @@ export async function getAllTrainingRegistrations() {
   if (missingSupabaseConfig || !supabase) {
     return { data: getPersistedRegistrations(), error: null };
   }
-  return supabase
-    .from('training_registrations')
-    .select('*')
-    .order('created_at', { ascending: false });
+
+  try {
+    const { data, error } = await supabase
+      .from('training_registrations')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return { data: getPersistedRegistrations(), error };
+    }
+
+    const persisted = getPersistedRegistrations();
+    const remoteIds = new Set((data || []).map((entry) => entry.id));
+    const remoteConfirmationCodes = new Set((data || []).map((entry) => String(entry.confirmation_code || '').trim()));
+
+    const localOnly = persisted.filter((entry) => {
+      const id = entry.id || '';
+      const code = String(entry.confirmation_code || '').trim();
+      return (
+        id.startsWith('local-') ||
+        (!remoteIds.has(id) && !remoteConfirmationCodes.has(code))
+      );
+    });
+
+    return { data: [...localOnly, ...(data || [])], error: null };
+  } catch (err) {
+    return { data: getPersistedRegistrations(), error: err };
+  }
 }
 
 export async function getTrainingRegistrationById(id) {
