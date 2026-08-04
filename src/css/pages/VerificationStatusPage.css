@@ -147,6 +147,32 @@
   box-shadow: 0 14px 28px rgba(15, 95, 43, 0.28);
 }
 
+.materials-note {
+  background: #f7fbf8;
+  border: 1px solid rgba(15, 95, 43, 0.12);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.materials-note h3 {
+  margin: 0 0 6px;
+  color: #0f5f2b;
+  font-size: 0.95rem;
+}
+
+.materials-note p {
+  margin: 0;
+  color: #4d6555;
+  line-height: 1.5;
+}
+
+.materials-note a {
+  color: #0f5f2b;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 @keyframes checkPop {
   0% { transform: scale(0.82); opacity: 0; }
   60% { transform: scale(1.04); opacity: 1; }

@@ -95,6 +95,22 @@ function Navbar({ activePage, onNavigate }) {
         </button>
         <button
           type="button"
+          className={activePage === 'event-register' ? 'active' : ''}
+          onClick={() => {
+            const nextPath = '/rhoppe_training';
+            window.history.pushState({}, '', nextPath);
+            onNavigate('event-register');
+            closeMenu();
+          }}
+          title="Event registration"
+        >
+          <span className="nav-icon" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 4v3M17 4v3M4 9h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.6"/><path d="M8 13h8M8 16h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+          </span>
+          <span className="link-text">Training</span>
+        </button>
+        <button
+          type="button"
           className={activePage === 'more' ? 'active' : ''}
           onClick={() => goToPage('more')}
           title="More"

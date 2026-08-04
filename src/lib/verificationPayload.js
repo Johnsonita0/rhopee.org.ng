@@ -56,6 +56,8 @@ const encodeVerificationPayload = (memberData) => {
     s: memberData?.status || 'verified',
     o: memberData?.outcome || 'verified',
     r: memberData?.reason || '',
+    u: memberData?.materialsUrl || '',
+    tr: memberData?.trainingTrack || '',
   };
 
   const payloadText = JSON.stringify(compactPayload);
@@ -111,6 +113,10 @@ const decodeVerificationPayload = (value) => {
         status: parsed.s,
         outcome: parsed.o,
         reason: parsed.r,
+        materialsUrl: parsed.u || '',
+        trainingTrack: parsed.tr || '',
+        materialsUrl: parsed.u || '',
+        trainingTrack: parsed.tr || '',
       };
     }
   } catch (err) {
