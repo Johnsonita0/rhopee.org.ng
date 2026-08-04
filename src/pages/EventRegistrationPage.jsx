@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import '../css/pages/EventRegistrationPage.css';
 import ConfirmationSlip from '../components/ConfirmationSlip.jsx';
 import { saveTrainingRegistration } from '../lib/supabaseClient.js';
+import { notifyApplicantRegistration } from '../lib/emailNotification.js';
 import { generateConfirmationCode } from '../lib/confirmationCodeGenerator.js';
 
 const trainingTracks = [
@@ -32,22 +33,7 @@ const initialForm = {
   emergencyContact: '',
   emergencyPhone: '',
   agreeToTerms: false,
-};
-
-const FORM_STEPS = [
-  { id: 1, title: 'Personal Info', description: 'Your details' },
-  { id: 2, title: 'Role & Location', description: 'Your assignment' },
-  { id: 3, title: 'Training Focus', description: 'Your track' },
-  { id: 4, title: 'Additional Info', description: 'Special needs' },
-  { id: 5, title: 'Attestation', description: 'Review & agree' },
-];
-
-function buildParticipantName(form) {
-  const nameParts = [form.surname, form.firstName, form.middleName]
-    .filter(Boolean)
-    .map((value) => String(value).trim());
-
-  if (nameParts.length > 0) {
+  newsletterOptIn: false,
     return nameParts.join(' ');
   }
 
@@ -62,6 +48,7 @@ function EventRegistrationPage() {
   const [submitted, setSubmitted] = useState(false);
   const [emailCheckMessage, setEmailCheckMessage] = useState('');
   const [saveStatus, setSaveStatus] = useState('idle');
+  const [newsletterMessage, setNewsletterMessage] = useState('');
 
   const existingRegistrations = useMemo(() => [], [form.email]);
 
@@ -180,6 +167,20 @@ function EventRegistrationPage() {
           setSaveStatus('failed');
           setMessage(error.message || 'This email address has already been used for a registration.');
           return;
+        }
+
+        try {
+          await notifyApplicantRegistration({
+            email: form.email,
+            fullName: buildParticipantName(form),
+            confirmationCode,
+            trainingTrackName,
+            newsletterOptIn: form.newsletterOptIn,
+          });
+          setNewsletterMessage('A confirmation email has been sent to your inbox.');
+        } catch (notificationError) {
+          console.warn('Email notification failed', notificationError);
+          setNewsletterMessage('Registration completed, but email notification could not be sent.');
         }
 
         setStatus('success');
@@ -453,6 +454,11 @@ function EventRegistrationPage() {
                 I confirm that I have read and agree to all the terms of this training agreement. *
               </label>
 
+              <label className="checkbox-row agreement-checkbox full-width">
+                <input type="checkbox" name="newsletterOptIn" checked={form.newsletterOptIn} onChange={handleChange} />
+                Yes, subscribe me to event updates and newsletter emails.
+              </label>
+
               {message && <p className="form-error">{message}</p>}
             </div>
           )}
@@ -485,6 +491,8 @@ function EventRegistrationPage() {
               {saveStatus === 'failed' && 'Registration failed to save. Please check the message above and try again.'}
             </p>
           )}
+
+          {newsletterMessage && <p className="form-message form-success">{newsletterMessage}</p>}
 
           {currentStep === FORM_STEPS.length && message && <p className={status === 'error' ? 'form-error' : 'form-success'}>{message}</p>}
         </form>
