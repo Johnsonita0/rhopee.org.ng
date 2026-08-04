@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import '../css/pages/EventRegistrationPage.css';
 import ConfirmationSlip from '../components/ConfirmationSlip.jsx';
 import { saveTrainingRegistration } from '../lib/supabaseClient.js';
@@ -54,13 +54,49 @@ function EventRegistrationPage() {
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [emailCheckMessage, setEmailCheckMessage] = useState('');
+
+  const existingRegistrations = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return [];
+    }
+
+    try {
+      const storedValue = window.localStorage.getItem('rhopee_training_registrations');
+      return storedValue ? JSON.parse(storedValue) : [];
+    } catch (error) {
+      console.warn('Unable to read persisted registrations for email check', error);
+      return [];
+    }
+  }, [form.email]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
+    const nextValue = type === 'checkbox' ? checked : value;
+
     setForm((current) => ({
       ...current,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: nextValue,
     }));
+
+    if (name === 'email') {
+      const trimmedValue = String(nextValue).trim().toLowerCase();
+      if (!trimmedValue) {
+        setEmailCheckMessage('');
+        setMessage('');
+        return;
+      }
+
+      const hasExistingRegistration = existingRegistrations.some((entry) => String(entry.email || '').trim().toLowerCase() === trimmedValue);
+      setEmailCheckMessage(
+        hasExistingRegistration ? 'This email address has already been used for a registration.' : ''
+      );
+      if (hasExistingRegistration) {
+        setMessage('This email address has already been used for a registration.');
+      } else {
+        setMessage('');
+      }
+    }
   };
 
   const validateStep = (step) => {
@@ -144,7 +180,13 @@ function EventRegistrationPage() {
           created_at: new Date().toISOString(),
         };
 
-        await saveTrainingRegistration(registrationData);
+        const { data, error } = await saveTrainingRegistration(registrationData);
+
+        if (error) {
+          setStatus('error');
+          setMessage(error.message || 'This email address has already been used for a registration.');
+          return;
+        }
 
         setStatus('success');
         setSubmitted(true);
@@ -283,6 +325,7 @@ function EventRegistrationPage() {
                 <label className="full-width">
                   Email address *
                   <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="you@example.com" required />
+                {emailCheckMessage ? <p className="form-error">{emailCheckMessage}</p> : null}
                 </label>
 
                 <label className="full-width">
