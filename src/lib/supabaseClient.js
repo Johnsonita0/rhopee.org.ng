@@ -135,7 +135,12 @@ export async function saveTrainingRegistration(registration) {
     const storedRegistrations = getPersistedRegistrations();
     savePersistedRegistrations([nextRegistration, ...storedRegistrations]);
     notifyRegistrationChange();
-    return { data: nextRegistration, error: null };
+    return {
+      data: null,
+      error: new Error(
+        'Unable to save registration to the database. Please check your connection and try again.'
+      ),
+    };
   }
 }
 

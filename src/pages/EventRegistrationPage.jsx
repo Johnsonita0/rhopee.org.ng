@@ -198,16 +198,7 @@ function EventRegistrationPage() {
       } catch (error) {
         console.error('Error saving registration:', error);
         setStatus('error');
-        setMessage('Registration saved locally. Error connecting to database: ' + error.message);
-        setTimeout(() => {
-          setStatus('success');
-          setSubmitted(true);
-          setForm({
-            ...form,
-            confirmationCode: generateConfirmationCode(),
-            trainingTrackName: trainingTracks.find((track) => track.id === form.trainingTrack)?.name || 'Training Track',
-          });
-        }, 1500);
+        setMessage('Unable to save registration to the database. Please try again later.');
       }
     }, 350);
   };
