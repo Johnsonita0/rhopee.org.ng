@@ -9,16 +9,14 @@ async function run() {
 
     const unique = Date.now();
     const testData = {
-      surname: 'E2E',
-      firstName: 'Tester',
+      fullName: 'E2E Tester',
       email: `e2e+${unique}@example.com`,
       phone: '08030000000',
       lga: 'Uyo',
     };
 
     // Fill step 1
-    await page.type('input[name="surname"]', testData.surname);
-    await page.type('input[name="firstName"]', testData.firstName);
+    await page.type('input[name="fullName"]', testData.fullName);
     await page.type('input[name="email"]', testData.email);
     await page.type('input[name="phone"]', testData.phone);
     await page.click('.nav-btn.primary'); // Next
@@ -65,7 +63,7 @@ async function run() {
     const found = await page.evaluate((name) => {
       const rows = Array.from(document.querySelectorAll('.admin-table tbody tr'));
       return rows.some((tr) => tr.innerText.includes(name));
-    }, `${testData.surname} ${testData.firstName}`);
+    }, testData.fullName);
 
     console.log('Found registration in admin table:', found);
 

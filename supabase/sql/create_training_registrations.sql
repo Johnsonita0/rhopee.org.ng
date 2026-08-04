@@ -1,6 +1,9 @@
 -- Create table for event training registrations
 CREATE TABLE IF NOT EXISTS public.training_registrations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  surname text,
+  first_name text,
+  middle_name text,
   full_name text NOT NULL,
   email text NOT NULL,
   phone text NOT NULL,

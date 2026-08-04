@@ -234,7 +234,7 @@ function EventRegistrationPage() {
         <div className="event-success-card" style={{ marginTop: '32px' }}>
           <div className="success-badge">✓</div>
           <span className="success-pill">Registration confirmed</span>
-          <h2>Welcome, {form.firstName.split(' ')[0] || form.surname || 'participant'}!</h2>
+          <h2>Welcome, {form.fullName.split(' ')[0] || 'participant'}!</h2>
           <p>Your registration for the Media Directors Empowerment Training has been confirmed.</p>
           
           <div className="event-summary">
@@ -308,18 +308,8 @@ function EventRegistrationPage() {
               </div>
               <div className="form-grid">
                 <label className="full-width">
-                  Surname *
-                  <input name="surname" value={form.surname} onChange={handleChange} placeholder="Your surname" required />
-                </label>
-
-                <label className="full-width">
-                  First name *
-                  <input name="firstName" value={form.firstName} onChange={handleChange} placeholder="Your first name" required />
-                </label>
-
-                <label className="full-width">
-                  Middle name (optional)
-                  <input name="middleName" value={form.middleName} onChange={handleChange} placeholder="Your middle name" />
+                  Full name *
+                  <input name="fullName" value={form.fullName} onChange={handleChange} placeholder="Your full name" required />
                 </label>
 
                 <label className="full-width">
