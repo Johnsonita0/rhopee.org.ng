@@ -532,7 +532,7 @@ const handleRegistrationsUpdated = () => {
                     type="button"
                     className="admin-action-btn danger"
                     onClick={deleteSelectedRegistration}
-                    disabled={!selectedRegistration || deleteLoading}
+                    disabled={!selectedRegistration || deleteLoading || String(selectedRegistration?.id || '').startsWith('local-')}
                   >
                     {deleteLoading ? 'Deleting…' : 'Delete registration'}
                   </button>

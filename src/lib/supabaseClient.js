@@ -138,6 +138,13 @@ export async function saveTrainingRegistration(registration) {
 }
 
 export async function deleteTrainingRegistration(registrationId) {
+  if (String(registrationId || '').startsWith('local-')) {
+    return {
+      data: null,
+      error: new Error('Cannot delete a local pending registration from Supabase.'),
+    };
+  }
+
   if (missingSupabaseConfig || !supabase) {
     return {
       data: null,
@@ -231,20 +238,7 @@ export async function getAllTrainingRegistrations() {
       return { data: getPersistedRegistrations(), error };
     }
 
-    const persisted = getPersistedRegistrations();
-    const remoteIds = new Set((data || []).map((entry) => entry.id));
-    const remoteConfirmationCodes = new Set((data || []).map((entry) => String(entry.confirmation_code || '').trim()));
-
-    const localOnly = persisted.filter((entry) => {
-      const id = entry.id || '';
-      const code = String(entry.confirmation_code || '').trim();
-      return (
-        id.startsWith('local-') ||
-        (!remoteIds.has(id) && !remoteConfirmationCodes.has(code))
-      );
-    });
-
-    return { data: [...localOnly, ...(data || [])], error: null };
+    return { data: data || [], error: null };
   } catch (err) {
     return { data: getPersistedRegistrations(), error: err };
   }
