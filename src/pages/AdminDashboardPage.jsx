@@ -303,7 +303,12 @@ function AdminDashboardPage({ onLogout }) {
         const storedMaterials = window.localStorage.getItem('rhopee_training_materials');
         if (storedMaterials) {
           const parsedMaterials = JSON.parse(storedMaterials);
-          setMaterialsByTrack((current) => ({ ...current, ...parsedMaterials }));
+          const normalizedMaterials = {
+            cinematography: parsedMaterials.cinematography || '',
+            photography: parsedMaterials.photography || '',
+            webdev: parsedMaterials.webdev || '',
+          };
+          setMaterialsByTrack(normalizedMaterials);
         }
       } catch (storageError) {
         console.warn('Unable to load saved training materials', storageError);
@@ -370,7 +375,13 @@ function AdminDashboardPage({ onLogout }) {
 
   const saveMaterialsLinks = () => {
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem('rhopee_training_materials', JSON.stringify(materialsByTrack));
+      const normalizedMaterials = {
+        cinematography: materialsByTrack.cinematography || '',
+        photography: materialsByTrack.photography || '',
+        webdev: materialsByTrack.webdev || '',
+      };
+      window.localStorage.setItem('rhopee_training_materials', JSON.stringify(normalizedMaterials));
+      setMaterialsByTrack(normalizedMaterials);
       setMaterialsMessage('Training materials links saved.');
     }
   };
