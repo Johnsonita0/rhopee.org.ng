@@ -3,8 +3,11 @@ import Navbar from './components/Navbar.jsx';
 import HomePage from './pages/HomePage.jsx';
 import MorePage from './pages/MorePage.jsx';
 import RegistrationPage from './pages/RegistrationPage.jsx';
+import EventRegistrationPage from './pages/EventRegistrationPage.jsx';
 import VerificationStatusPage from './pages/VerificationStatusPage.jsx';
-import { verifyIdCode } from './lib/supabaseClient.js';
+import AdminLoginPage from './pages/AdminLoginPage.jsx';
+import AdminDashboardPage from './pages/AdminDashboardPage.jsx';
+import { ALLOWED_ADMIN_USER_ID, getAdminSession, signOutAdmin, verifyIdCode } from './lib/supabaseClient.js';
 import './css/App.css';
 import { decodeVerificationPayload, encodeVerificationPayload, parseScannableQrValue } from './lib/verificationPayload.js';
 
@@ -15,10 +18,21 @@ function App() {
   const [error, setError] = useState('');
   const [page, setPage] = useState('home');
   const [scannedMemberData, setScannedMemberData] = useState(null);
+  const [adminAuthenticated, setAdminAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const storedAuth = window.localStorage.getItem('adminAuth');
+      return storedAuth ? JSON.parse(storedAuth).authenticated : false;
+    } catch (error) {
+      console.warn('Unable to read admin auth state', error);
+      return false;
+    }
+  });
   const [routeMode, setRouteMode] = useState(() => {
     if (typeof window === 'undefined') return 'app';
     const path = window.location.pathname.toLowerCase();
     if (path === '/verifyme') return 'verify';
+    if (path === '/admin') return 'admin';
     return 'app';
   });
 
@@ -59,6 +73,9 @@ function App() {
       status: derivedStatus,
       outcome: derivedOutcome,
       reason: memberData?.reason || fallbackReason,
+      materialsUrl: memberData?.materialsUrl || '',
+      trainingTrack: memberData?.trainingTrack || '',
+      trainingTrackName: memberData?.trainingTrackName || '',
     };
   };
 
@@ -224,6 +241,27 @@ function App() {
     }
   };
 
+  const handleAdminLoginSuccess = () => {
+    setAdminAuthenticated(true);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({}, '', '/admin');
+    }
+  };
+
+  const handleAdminLogout = async () => {
+    try {
+      await signOutAdmin();
+    } catch (error) {
+      console.warn('Unable to sign out from Supabase', error);
+    }
+
+    setAdminAuthenticated(false);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('adminAuth');
+      window.history.replaceState({}, '', '/admin');
+    }
+  };
+
   useEffect(() => {
     const updateRoute = () => {
       const currentPath = window.location.pathname.toLowerCase();
@@ -239,10 +277,17 @@ function App() {
         return;
       }
 
+      if (currentPath === '/admin') {
+        setRouteMode('admin');
+        return;
+      }
+
       setRouteMode('app');
 
       if (currentPath === '/register') {
         setPage('register');
+      } else if (currentPath === '/event-register' || currentPath === '/rhoppe_training') {
+        setPage('event-register');
       } else if (currentHash === '#more' || ['#gallery', '#news', '#contact'].includes(currentHash)) {
         setPage('more');
       } else if (currentHash === '#verify-status') {
@@ -262,7 +307,37 @@ function App() {
       }
     };
 
+    const restoreAdminSession = async () => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+
+      try {
+        const storedAuth = window.localStorage.getItem('adminAuth');
+        if (storedAuth) {
+          const parsedAuth = JSON.parse(storedAuth);
+          if (parsedAuth.authenticated) {
+            setAdminAuthenticated(true);
+          }
+        }
+
+        const { data, error } = await getAdminSession();
+        if (error) {
+          throw error;
+        }
+
+        if (data?.session?.user?.id === ALLOWED_ADMIN_USER_ID) {
+          setAdminAuthenticated(true);
+        } else if (!window.localStorage.getItem('adminAuth')) {
+          setAdminAuthenticated(false);
+        }
+      } catch (error) {
+        console.warn('Unable to restore admin session', error);
+      }
+    };
+
     updateRoute();
+    restoreAdminSession();
     window.addEventListener('popstate', updateRoute);
     window.addEventListener('hashchange', updateRoute);
 
@@ -278,6 +353,14 @@ function App() {
         memberData={scannedMemberData}
         onClose={handleBackToScan}
       />
+    );
+  }
+
+  if (routeMode === 'admin') {
+    return adminAuthenticated ? (
+      <AdminDashboardPage onLogout={handleAdminLogout} />
+    ) : (
+      <AdminLoginPage onLoginSuccess={handleAdminLoginSuccess} />
     );
   }
 
@@ -302,6 +385,7 @@ function App() {
         )}
         {page === 'more' && <MorePage />}
         {page === 'register' && <RegistrationPage />}
+        {page === 'event-register' && <EventRegistrationPage />}
       </div>
       <footer className="app-footer">
         <p>© {new Date().getFullYear()} RHOPEE. Secure member verification for your organization.</p>
