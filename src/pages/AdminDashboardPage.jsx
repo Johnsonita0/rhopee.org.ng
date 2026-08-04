@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import '../css/pages/AdminDashboardPage.css';
 import ConfirmationSlip from '../components/ConfirmationSlip.jsx';
-import { getAllTrainingRegistrations } from '../lib/supabaseClient.js';
+import { getAllTrainingRegistrations, pushPendingRegistrations } from '../lib/supabaseClient.js';
 
 const trackLabels = {
   cinematography: 'Cinematography',
@@ -357,21 +357,40 @@ function AdminDashboardPage({ onLogout }) {
 
     loadRegistrations();
 
-    const handleRegistrationsUpdated = () => {
+    const handleRegistrationsUpdated = async () => {
+      await syncPendingRegistrations();
       loadRegistrations();
     };
 
-    const handleStorageEvent = (e) => {
+    const handleStorageEvent = async (e) => {
       if (!e) return;
       // Only refresh when the registrations storage key changes in another tab
       if (e.key === 'rhopee_training_registrations') {
+        await syncPendingRegistrations();
         loadRegistrations();
+      }
+    };
+
+    const syncPendingRegistrations = async () => {
+      try {
+        const { pushed, error } = await pushPendingRegistrations();
+        if (error) {
+          console.warn('Pending registration sync failed:', error);
+          return;
+        }
+
+        if (pushed > 0) {
+          loadRegistrations();
+        }
+      } catch (syncError) {
+        console.warn('Unable to sync pending registrations:', syncError);
       }
     };
 
     if (typeof window !== 'undefined') {
       window.addEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
       window.addEventListener('storage', handleStorageEvent);
+      syncPendingRegistrations();
     }
 
     return () => {
