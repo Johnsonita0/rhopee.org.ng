@@ -137,6 +137,31 @@ export async function saveTrainingRegistration(registration) {
   }
 }
 
+export async function deleteTrainingRegistration(registrationId) {
+  if (missingSupabaseConfig || !supabase) {
+    return {
+      data: null,
+      error: new Error('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'),
+    };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('training_registrations')
+      .delete()
+      .eq('id', registrationId)
+      .select()
+      .single();
+
+    return { data, error };
+  } catch (error) {
+    return {
+      data: null,
+      error: new Error('Unable to delete registration. Please try again.'),
+    };
+  }
+}
+
 export async function signInAdmin(email, password) {
   if (missingSupabaseConfig || !supabase) {
     throw new Error('Supabase credentials are missing. Add your Supabase URL and anon key to the environment.');

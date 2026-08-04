@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import '../css/pages/AdminDashboardPage.css';
 import ConfirmationSlip from '../components/ConfirmationSlip.jsx';
-import { getAllTrainingRegistrations } from '../lib/supabaseClient.js';
+import { getAllTrainingRegistrations, deleteTrainingRegistration } from '../lib/supabaseClient.js';
 
 const trackLabels = {
   cinematography: 'Cinematography',
@@ -40,6 +40,7 @@ function AdminDashboardPage({ onLogout }) {
   });
   const [materialsMessage, setMaterialsMessage] = useState('');
   const [debugInfo, setDebugInfo] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const escapeHtml = (value = '') =>
     String(value)
@@ -203,6 +204,37 @@ function AdminDashboardPage({ onLogout }) {
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
+  };
+
+  const deleteSelectedRegistration = async () => {
+    if (!selectedRegistration) {
+      return;
+    }
+
+    if (!window.confirm(`Delete registration for ${selectedRegistration.full_name || 'this participant'}? This cannot be undone.`)) {
+      return;
+    }
+
+    setDeleteLoading(true);
+    setError('');
+
+    const { error: deleteError } = await deleteTrainingRegistration(selectedRegistration.id);
+
+    if (deleteError) {
+      setError(deleteError.message || 'Unable to delete registration.');
+      setDeleteLoading(false);
+      return;
+    }
+
+    setRegistrations((current) => {
+      const updated = current.filter((registration) => registration.id !== selectedRegistration.id);
+      setSelectedRegistration(updated[0] || null);
+      setSelectedForPrint((currentSelection) => currentSelection.filter((id) => id !== selectedRegistration.id));
+      return updated;
+    });
+
+    setDebugInfo(`Deleted registration ${selectedRegistration.id}`);
+    setDeleteLoading(false);
   };
 
   const toggleRegistrationSelection = (registrationId) => {
@@ -495,6 +527,14 @@ const handleRegistrationsUpdated = () => {
                   </button>
                   <button type="button" className="admin-action-btn secondary" onClick={printSelectedSheet} disabled={!selectedRegistration && !selectedForPrint.length}>
                     Print selected sheet
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-action-btn danger"
+                    onClick={deleteSelectedRegistration}
+                    disabled={!selectedRegistration || deleteLoading}
+                  >
+                    {deleteLoading ? 'Deleting…' : 'Delete registration'}
                   </button>
                 </div>
               </div>
