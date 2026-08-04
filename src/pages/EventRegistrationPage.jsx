@@ -156,10 +156,7 @@ function EventRegistrationPage() {
         const participantName = buildParticipantName(form);
 
         const registrationData = {
-          full_name: participantName,
-          surname: form.surname,
-          first_name: form.firstName,
-          middle_name: form.middleName,
+          full_name: form.fullName || participantName,
           email: form.email,
           phone: form.phone,
           role: form.role,
