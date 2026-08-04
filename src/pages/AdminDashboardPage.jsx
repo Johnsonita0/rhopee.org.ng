@@ -39,7 +39,7 @@ function AdminDashboardPage({ onLogout }) {
     webdev: '',
   });
   const [materialsMessage, setMaterialsMessage] = useState('');
-  const [debugInfo, setDebugInfo] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const escapeHtml = (value = '') =>
@@ -351,6 +351,7 @@ function AdminDashboardPage({ onLogout }) {
 
   useEffect(() => {
     let isMounted = true;
+    let toastTimer = null;
 
     async function loadRegistrations() {
       try {
@@ -367,7 +368,8 @@ function AdminDashboardPage({ onLogout }) {
         }
 
         console.log('[AdminDashboard] loaded registrations', data?.length);
-        setDebugInfo(`loaded ${data?.length || 0} registrations`);
+        setToastMessage(`Loaded ${data?.length || 0} registrations.`);
+        toastTimer = window.setTimeout(() => setToastMessage(''), 3000);
         setRegistrations(data || []);
         if (data?.length) {
           setSelectedRegistration((currentSelection) => {
@@ -392,18 +394,21 @@ function AdminDashboardPage({ onLogout }) {
 
     loadRegistrations();
 
-const handleRegistrationsUpdated = () => {
-          loadRegistrations();
-        };
+    const handleRegistrationsUpdated = () => {
+      loadRegistrations();
+    };
 
-        if (typeof window !== 'undefined') {
-          window.addEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
     }
 
     return () => {
       isMounted = false;
       if (typeof window !== 'undefined') {
         window.removeEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
+      }
+      if (toastTimer) {
+        window.clearTimeout(toastTimer);
       }
     };
   }, []);
@@ -498,9 +503,9 @@ const handleRegistrationsUpdated = () => {
           </div>
         </div>
 
-        {debugInfo ? (
-          <div className="admin-debug-banner">
-            <strong>Debug:</strong> {debugInfo}
+        {toastMessage ? (
+          <div className="admin-toast-banner">
+            {toastMessage}
           </div>
         ) : null}
 
