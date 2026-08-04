@@ -39,6 +39,7 @@ function AdminDashboardPage({ onLogout }) {
     webdev: '',
   });
   const [materialsMessage, setMaterialsMessage] = useState('');
+  const [debugInfo, setDebugInfo] = useState('');
 
   const escapeHtml = (value = '') =>
     String(value)
@@ -333,6 +334,8 @@ function AdminDashboardPage({ onLogout }) {
           throw fetchError;
         }
 
+        console.log('[AdminDashboard] loaded registrations', data?.length);
+        setDebugInfo(`loaded ${data?.length || 0} registrations`);
         setRegistrations(data || []);
         if (data?.length) {
           setSelectedRegistration((currentSelection) => {
@@ -366,8 +369,9 @@ function AdminDashboardPage({ onLogout }) {
       if (!e) return;
       // Only refresh when the registrations storage key changes in another tab
       if (e.key === 'rhopee_training_registrations') {
+        console.log('[AdminDashboard] storage event for registrations detected');
         await syncPendingRegistrations();
-        loadRegistrations();
+        await loadRegistrations();
       }
     };
 
@@ -376,14 +380,20 @@ function AdminDashboardPage({ onLogout }) {
         const { pushed, error } = await pushPendingRegistrations();
         if (error) {
           console.warn('Pending registration sync failed:', error);
+          setDebugInfo(`sync failed: ${error.message}`);
           return;
         }
 
         if (pushed > 0) {
+          console.log(`[AdminDashboard] pushed ${pushed} pending registrations.`);
+          setDebugInfo(`synced ${pushed} pending registrations`);
           loadRegistrations();
+        } else {
+          setDebugInfo('no pending registrations to sync');
         }
       } catch (syncError) {
         console.warn('Unable to sync pending registrations:', syncError);
+        setDebugInfo(`sync error: ${syncError.message}`);
       }
     };
 
@@ -491,6 +501,12 @@ function AdminDashboardPage({ onLogout }) {
             <strong>{registrations.filter((row) => row.confirmation_code).length}</strong>
           </div>
         </div>
+
+        {debugInfo ? (
+          <div className="admin-debug-banner">
+            <strong>Debug:</strong> {debugInfo}
+          </div>
+        ) : null}
 
         {loading ? (
           <div className="admin-state-card">Loading registrations…</div>
