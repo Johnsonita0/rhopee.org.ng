@@ -361,14 +361,24 @@ function AdminDashboardPage({ onLogout }) {
       loadRegistrations();
     };
 
+    const handleStorageEvent = (e) => {
+      if (!e) return;
+      // Only refresh when the registrations storage key changes in another tab
+      if (e.key === 'rhopee_training_registrations') {
+        loadRegistrations();
+      }
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
+      window.addEventListener('storage', handleStorageEvent);
     }
 
     return () => {
       isMounted = false;
       if (typeof window !== 'undefined') {
         window.removeEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
+        window.removeEventListener('storage', handleStorageEvent);
       }
     };
   }, []);
