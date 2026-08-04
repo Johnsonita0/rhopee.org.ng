@@ -267,17 +267,17 @@ function EventRegistrationPage() {
               <div className="form-grid">
                 <label className="full-width">
                   Surname *
-                  <input name="surname" value={form.surname} onChange={handleChange} placeholder="Okafor" required />
+                  <input name="surname" value={form.surname} onChange={handleChange} placeholder="Your surname" required />
                 </label>
 
                 <label className="full-width">
                   First name *
-                  <input name="firstName" value={form.firstName} onChange={handleChange} placeholder="Ada" required />
+                  <input name="firstName" value={form.firstName} onChange={handleChange} placeholder="Your first name" required />
                 </label>
 
                 <label className="full-width">
                   Middle name (optional)
-                  <input name="middleName" value={form.middleName} onChange={handleChange} placeholder="Grace" />
+                  <input name="middleName" value={form.middleName} onChange={handleChange} placeholder="Your middle name" />
                 </label>
 
                 <label className="full-width">
