@@ -7,7 +7,7 @@ import EventRegistrationPage from './pages/EventRegistrationPage.jsx';
 import VerificationStatusPage from './pages/VerificationStatusPage.jsx';
 import AdminLoginPage from './pages/AdminLoginPage.jsx';
 import AdminDashboardPage from './pages/AdminDashboardPage.jsx';
-import { ALLOWED_ADMIN_USER_ID, getAdminSession, signOutAdmin, verifyIdCode } from './lib/supabaseClient.js';
+import { ALLOWED_ADMIN_USER_ID, getAdminSession, signOutAdmin, verifyIdCode, pushPendingRegistrations } from './lib/supabaseClient.js';
 import './css/App.css';
 import { decodeVerificationPayload, encodeVerificationPayload, parseScannableQrValue } from './lib/verificationPayload.js';
 
@@ -338,12 +338,31 @@ function App() {
 
     updateRoute();
     restoreAdminSession();
+
+    // Attempt to push any locally persisted registrations to Supabase on app load
+    try {
+      pushPendingRegistrations().catch((e) => console.warn('pushPendingRegistrations error', e));
+    } catch (e) {
+      // ignore if not available
+    }
+
+    // When browser regains connectivity, try pushing pending registrations
+    const handleOnline = () => {
+      try {
+        pushPendingRegistrations().catch((e) => console.warn('pushPendingRegistrations error', e));
+      } catch (e) {
+        // ignore
+      }
+    };
+
     window.addEventListener('popstate', updateRoute);
     window.addEventListener('hashchange', updateRoute);
+    window.addEventListener('online', handleOnline);
 
     return () => {
       window.removeEventListener('popstate', updateRoute);
       window.removeEventListener('hashchange', updateRoute);
+      window.removeEventListener('online', handleOnline);
     };
   }, []);
 

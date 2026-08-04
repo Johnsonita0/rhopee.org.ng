@@ -216,3 +216,49 @@ export async function getTrainingRegistrationById(id) {
     .eq('id', id)
     .single();
 }
+
+export async function pushPendingRegistrations() {
+  if (missingSupabaseConfig || !supabase) {
+    return { pushed: 0, error: new Error('Supabase not configured') };
+  }
+
+  const persisted = getPersistedRegistrations();
+  const pending = persisted.filter((r) => String(r.id || '').startsWith('local-') || !r.id);
+  if (!pending.length) {
+    return { pushed: 0 };
+  }
+
+  let pushed = 0;
+
+  for (const entry of pending) {
+    // prepare payload: remove local id and created_at to let Supabase assign values
+    const payload = { ...entry };
+    delete payload.id;
+    // keep created_at if present
+
+    try {
+      const { data, error } = await supabase.from('training_registrations').insert(payload).select().single();
+      if (error) {
+        // if duplicate by unique constraint, attempt to skip
+        console.warn('Failed to push pending registration', error);
+        continue;
+      }
+
+      // Replace local entry with remote data in persisted store
+      try {
+        const current = getPersistedRegistrations();
+        const others = current.filter((c) => c.id !== entry.id);
+        savePersistedRegistrations([data, ...others]);
+      } catch (persistError) {
+        console.warn('Unable to persist pushed registration locally', persistError);
+      }
+
+      pushed += 1;
+      notifyRegistrationChange();
+    } catch (err) {
+      console.warn('Error pushing pending registration', err);
+    }
+  }
+
+  return { pushed };
+}
