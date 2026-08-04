@@ -197,45 +197,10 @@ export async function getAllTrainingRegistrations() {
   if (missingSupabaseConfig || !supabase) {
     return { data: getPersistedRegistrations(), error: null };
   }
-
-  try {
-    const { data, error } = await supabase
-      .from('training_registrations')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      throw error;
-    }
-
-    // Merge locally persisted registrations (e.g., when offline or local-only entries)
-    const persisted = getPersistedRegistrations() || [];
-
-    // Avoid duplicates by confirmation code or id
-    const seen = new Set();
-    const merged = [];
-
-    for (const p of persisted) {
-      const key = (p.id || p.confirmation_code || p.email || '').toString();
-      if (!seen.has(key)) {
-        seen.add(key);
-        merged.push(p);
-      }
-    }
-
-    for (const r of data || []) {
-      const key = (r.id || r.confirmation_code || r.email || '').toString();
-      if (!seen.has(key)) {
-        seen.add(key);
-        merged.push(r);
-      }
-    }
-
-    return { data: merged, error: null };
-  } catch (err) {
-    // Fallback to persisted registrations if remote fetch fails
-    return { data: getPersistedRegistrations(), error: null };
-  }
+  return supabase
+    .from('training_registrations')
+    .select('*')
+    .order('created_at', { ascending: false });
 }
 
 export async function getTrainingRegistrationById(id) {
