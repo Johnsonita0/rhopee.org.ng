@@ -216,7 +216,25 @@
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #0f5f2b #eef6ef;
+}
+
+.table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: #eef6ef;
+  border-radius: 999px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: #0f5f2b;
+  border-radius: 999px;
 }
 
 .admin-table {
