@@ -362,11 +362,23 @@
     background: white;
   }
 
-  body > *:not(.confirmation-slip-container) {
+  /* hide everything except the print portal (which will contain the slip) */
+  #print-slip-portal {
+    display: none;
+  }
+
+  body > *:not(#print-slip-portal) {
     display: none !important;
   }
 
-  body.printing-confirmation-slip .confirmation-slip-container {
+  body.printing-confirmation-slip #print-slip-portal {
+    display: block !important;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  body.printing-confirmation-slip #print-slip-portal .confirmation-slip-container {
     display: block !important;
     max-width: none;
     padding: 0;

@@ -37,6 +37,20 @@ function notifyRegistrationChange() {
   window.dispatchEvent(new CustomEvent('rhopee:registrations-updated'));
 }
 
+function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function findDuplicateRegistrationByEmail(email) {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const storedRegistrations = getPersistedRegistrations();
+  return storedRegistrations.find((entry) => normalizeEmail(entry.email) === normalizedEmail) || null;
+}
+
 export const supabase = missingSupabaseConfig
   ? null
   : createClient(supabaseUrl, supabaseAnonKey);
@@ -77,6 +91,14 @@ export async function saveTrainingRegistration(registration) {
     created_at: entry.created_at || new Date().toISOString(),
   });
 
+  const duplicateRegistration = findDuplicateRegistrationByEmail(registration.email);
+  if (duplicateRegistration) {
+    return {
+      data: null,
+      error: new Error('This email address has already been used for a registration.'),
+    };
+  }
+
   if (missingSupabaseConfig || !supabase) {
     const nextRegistration = buildLocalRegistration(registration);
     const storedRegistrations = getPersistedRegistrations();
@@ -96,14 +118,29 @@ export async function saveTrainingRegistration(registration) {
       throw error;
     }
 
-    return { data, error: null };
+      // Persist a local copy for quick client-side reads and notify listeners
+      try {
+        const storedRegistrations = getPersistedRegistrations();
+        savePersistedRegistrations([data, ...storedRegistrations]);
+      } catch (persistError) {
+        // ignore local persistence errors
+      }
+
+      notifyRegistrationChange();
+
+      return { data, error: null };
   } catch (error) {
     console.warn('Supabase registration save failed; storing the registration locally instead.', error);
     const nextRegistration = buildLocalRegistration(registration);
     const storedRegistrations = getPersistedRegistrations();
     savePersistedRegistrations([nextRegistration, ...storedRegistrations]);
     notifyRegistrationChange();
-    return { data: nextRegistration, error: null };
+    return {
+      data: null,
+      error: new Error(
+        'Unable to save registration to the database. Please check your connection and try again.'
+      ),
+    };
   }
 }
 
@@ -166,10 +203,33 @@ export async function getAllTrainingRegistrations() {
     return { data: getPersistedRegistrations(), error: null };
   }
 
-  return supabase
-    .from('training_registrations')
-    .select('*')
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('training_registrations')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return { data: getPersistedRegistrations(), error };
+    }
+
+    const persisted = getPersistedRegistrations();
+    const remoteIds = new Set((data || []).map((entry) => entry.id));
+    const remoteConfirmationCodes = new Set((data || []).map((entry) => String(entry.confirmation_code || '').trim()));
+
+    const localOnly = persisted.filter((entry) => {
+      const id = entry.id || '';
+      const code = String(entry.confirmation_code || '').trim();
+      return (
+        id.startsWith('local-') ||
+        (!remoteIds.has(id) && !remoteConfirmationCodes.has(code))
+      );
+    });
+
+    return { data: [...localOnly, ...(data || [])], error: null };
+  } catch (err) {
+    return { data: getPersistedRegistrations(), error: err };
+  }
 }
 
 export async function getTrainingRegistrationById(id) {
@@ -184,4 +244,50 @@ export async function getTrainingRegistrationById(id) {
     .select('*')
     .eq('id', id)
     .single();
+}
+
+export async function pushPendingRegistrations() {
+  if (missingSupabaseConfig || !supabase) {
+    return { pushed: 0, error: new Error('Supabase not configured') };
+  }
+
+  const persisted = getPersistedRegistrations();
+  const pending = persisted.filter((r) => String(r.id || '').startsWith('local-') || !r.id);
+  if (!pending.length) {
+    return { pushed: 0 };
+  }
+
+  let pushed = 0;
+
+  for (const entry of pending) {
+    // prepare payload: remove local id and created_at to let Supabase assign values
+    const payload = { ...entry };
+    delete payload.id;
+    // keep created_at if present
+
+    try {
+      const { data, error } = await supabase.from('training_registrations').insert(payload).select().single();
+      if (error) {
+        // if duplicate by unique constraint, attempt to skip
+        console.warn('Failed to push pending registration', error);
+        continue;
+      }
+
+      // Replace local entry with remote data in persisted store
+      try {
+        const current = getPersistedRegistrations();
+        const others = current.filter((c) => c.id !== entry.id);
+        savePersistedRegistrations([data, ...others]);
+      } catch (persistError) {
+        console.warn('Unable to persist pushed registration locally', persistError);
+      }
+
+      pushed += 1;
+      notifyRegistrationChange();
+    } catch (err) {
+      console.warn('Error pushing pending registration', err);
+    }
+  }
+
+  return { pushed };
 }

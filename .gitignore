@@ -5,3 +5,7 @@ dist/
 .DS_Store
 .vercel
 .env*
+rhopee_slip_*.pdf
+rhopee_slip_*.png
+*.png
+*.pdf

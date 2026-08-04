@@ -18,13 +18,35 @@ function ConfirmationSlip({ data }) {
     }
   };
   const handlePrint = () => {
+    const container = document.querySelector('.confirmation-slip-container');
+    if (!container || typeof document === 'undefined') {
+      return;
+    }
+
+    // Create a lightweight portal at the body root so the slip is a direct child
+    const portalId = 'print-slip-portal';
+    let portal = document.getElementById(portalId);
+    if (!portal) {
+      portal = document.createElement('div');
+      portal.id = portalId;
+      document.body.appendChild(portal);
+    }
+
+    // Clone the slip into the portal to avoid hidden parent elements interfering
+    portal.innerHTML = '';
+    const clone = container.cloneNode(true);
+    portal.appendChild(clone);
+
     document.body.classList.add('printing-confirmation-slip');
+    // Give the browser a moment to render the moved content
     window.setTimeout(() => {
       window.print();
       window.setTimeout(() => {
         document.body.classList.remove('printing-confirmation-slip');
+        // clean up portal
+        portal.innerHTML = '';
       }, 500);
-    }, 50);
+    }, 120);
   };
 
   const registrationDate = new Date().toLocaleDateString('en-NG', {

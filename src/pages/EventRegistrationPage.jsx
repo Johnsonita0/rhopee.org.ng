@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import '../css/pages/EventRegistrationPage.css';
 import ConfirmationSlip from '../components/ConfirmationSlip.jsx';
 import { saveTrainingRegistration } from '../lib/supabaseClient.js';
@@ -54,13 +54,50 @@ function EventRegistrationPage() {
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [emailCheckMessage, setEmailCheckMessage] = useState('');
+  const [saveStatus, setSaveStatus] = useState('idle');
+
+  const existingRegistrations = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return [];
+    }
+
+    try {
+      const storedValue = window.localStorage.getItem('rhopee_training_registrations');
+      return storedValue ? JSON.parse(storedValue) : [];
+    } catch (error) {
+      console.warn('Unable to read persisted registrations for email check', error);
+      return [];
+    }
+  }, [form.email]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
+    const nextValue = type === 'checkbox' ? checked : value;
+
     setForm((current) => ({
       ...current,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: nextValue,
     }));
+
+    if (name === 'email') {
+      const trimmedValue = String(nextValue).trim().toLowerCase();
+      if (!trimmedValue) {
+        setEmailCheckMessage('');
+        setMessage('');
+        return;
+      }
+
+      const hasExistingRegistration = existingRegistrations.some((entry) => String(entry.email || '').trim().toLowerCase() === trimmedValue);
+      setEmailCheckMessage(
+        hasExistingRegistration ? 'This email address has already been used for a registration.' : ''
+      );
+      if (hasExistingRegistration) {
+        setMessage('This email address has already been used for a registration.');
+      } else {
+        setMessage('');
+      }
+    }
   };
 
   const validateStep = (step) => {
@@ -116,6 +153,7 @@ function EventRegistrationPage() {
       return;
     }
 
+    setSaveStatus('saving');
     setTimeout(async () => {
       try {
         const confirmationCode = generateConfirmationCode();
@@ -144,9 +182,17 @@ function EventRegistrationPage() {
           created_at: new Date().toISOString(),
         };
 
-        await saveTrainingRegistration(registrationData);
+        const { data, error } = await saveTrainingRegistration(registrationData);
+
+        if (error) {
+          setStatus('error');
+          setSaveStatus('failed');
+          setMessage(error.message || 'This email address has already been used for a registration.');
+          return;
+        }
 
         setStatus('success');
+        setSaveStatus('completed');
         setSubmitted(true);
         setForm({
           ...form,
@@ -156,16 +202,8 @@ function EventRegistrationPage() {
       } catch (error) {
         console.error('Error saving registration:', error);
         setStatus('error');
-        setMessage('Registration saved locally. Error connecting to database: ' + error.message);
-        setTimeout(() => {
-          setStatus('success');
-          setSubmitted(true);
-          setForm({
-            ...form,
-            confirmationCode: generateConfirmationCode(),
-            trainingTrackName: trainingTracks.find((track) => track.id === form.trainingTrack)?.name || 'Training Track',
-          });
-        }, 1500);
+        setSaveStatus('failed');
+        setMessage('Unable to save registration to the database. Please try again later.');
       }
     }, 350);
   };
@@ -192,7 +230,7 @@ function EventRegistrationPage() {
         <div className="event-success-card" style={{ marginTop: '32px' }}>
           <div className="success-badge">✓</div>
           <span className="success-pill">Registration confirmed</span>
-          <h2>Welcome, {form.firstName.split(' ')[0] || form.surname || 'participant'}!</h2>
+          <h2>Welcome, {form.fullName.split(' ')[0] || 'participant'}!</h2>
           <p>Your registration for the Media Directors Empowerment Training has been confirmed.</p>
           
           <div className="event-summary">
@@ -266,23 +304,14 @@ function EventRegistrationPage() {
               </div>
               <div className="form-grid">
                 <label className="full-width">
-                  Surname *
-                  <input name="surname" value={form.surname} onChange={handleChange} placeholder="Your surname" required />
-                </label>
-
-                <label className="full-width">
-                  First name *
-                  <input name="firstName" value={form.firstName} onChange={handleChange} placeholder="Your first name" required />
-                </label>
-
-                <label className="full-width">
-                  Middle name (optional)
-                  <input name="middleName" value={form.middleName} onChange={handleChange} placeholder="Your middle name" />
+                  Full name *
+                  <input name="fullName" value={form.fullName} onChange={handleChange} placeholder="Your full name" required />
                 </label>
 
                 <label className="full-width">
                   Email address *
                   <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="you@example.com" required />
+                {emailCheckMessage ? <p className="form-error">{emailCheckMessage}</p> : null}
                 </label>
 
                 <label className="full-width">
@@ -457,6 +486,14 @@ function EventRegistrationPage() {
               </button>
             )}
           </div>
+
+          {saveStatus !== 'idle' && (
+            <p className={`form-message save-status ${saveStatus}`}>
+              {saveStatus === 'saving' && 'Saving registration to the database...'}
+              {saveStatus === 'completed' && 'Registration saved successfully.'}
+              {saveStatus === 'failed' && 'Registration failed to save. Please check the message above and try again.'}
+            </p>
+          )}
 
           {currentStep === FORM_STEPS.length && message && <p className={status === 'error' ? 'form-error' : 'form-success'}>{message}</p>}
         </form>

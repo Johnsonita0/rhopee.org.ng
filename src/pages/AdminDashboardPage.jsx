@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import '../css/pages/AdminDashboardPage.css';
 import ConfirmationSlip from '../components/ConfirmationSlip.jsx';
-import { getAllTrainingRegistrations } from '../lib/supabaseClient.js';
+import { getAllTrainingRegistrations, pushPendingRegistrations } from '../lib/supabaseClient.js';
 
 const trackLabels = {
   cinematography: 'Cinematography',
@@ -39,6 +39,7 @@ function AdminDashboardPage({ onLogout }) {
     webdev: '',
   });
   const [materialsMessage, setMaterialsMessage] = useState('');
+  const [debugInfo, setDebugInfo] = useState('');
 
   const escapeHtml = (value = '') =>
     String(value)
@@ -333,6 +334,8 @@ function AdminDashboardPage({ onLogout }) {
           throw fetchError;
         }
 
+        console.log('[AdminDashboard] loaded registrations', data?.length);
+        setDebugInfo(`loaded ${data?.length || 0} registrations`);
         setRegistrations(data || []);
         if (data?.length) {
           setSelectedRegistration((currentSelection) => {
@@ -357,18 +360,54 @@ function AdminDashboardPage({ onLogout }) {
 
     loadRegistrations();
 
-    const handleRegistrationsUpdated = () => {
+    const handleRegistrationsUpdated = async () => {
+      await syncPendingRegistrations();
       loadRegistrations();
+    };
+
+    const handleStorageEvent = async (e) => {
+      if (!e) return;
+      // Only refresh when the registrations storage key changes in another tab
+      if (e.key === 'rhopee_training_registrations') {
+        console.log('[AdminDashboard] storage event for registrations detected');
+        await syncPendingRegistrations();
+        await loadRegistrations();
+      }
+    };
+
+    const syncPendingRegistrations = async () => {
+      try {
+        const { pushed, error } = await pushPendingRegistrations();
+        if (error) {
+          console.warn('Pending registration sync failed:', error);
+          setDebugInfo(`sync failed: ${error.message}`);
+          return;
+        }
+
+        if (pushed > 0) {
+          console.log(`[AdminDashboard] pushed ${pushed} pending registrations.`);
+          setDebugInfo(`synced ${pushed} pending registrations`);
+          loadRegistrations();
+        } else {
+          setDebugInfo('no pending registrations to sync');
+        }
+      } catch (syncError) {
+        console.warn('Unable to sync pending registrations:', syncError);
+        setDebugInfo(`sync error: ${syncError.message}`);
+      }
     };
 
     if (typeof window !== 'undefined') {
       window.addEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
+      window.addEventListener('storage', handleStorageEvent);
+      syncPendingRegistrations();
     }
 
     return () => {
       isMounted = false;
       if (typeof window !== 'undefined') {
         window.removeEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
+        window.removeEventListener('storage', handleStorageEvent);
       }
     };
   }, []);
@@ -462,6 +501,12 @@ function AdminDashboardPage({ onLogout }) {
             <strong>{registrations.filter((row) => row.confirmation_code).length}</strong>
           </div>
         </div>
+
+        {debugInfo ? (
+          <div className="admin-debug-banner">
+            <strong>Debug:</strong> {debugInfo}
+          </div>
+        ) : null}
 
         {loading ? (
           <div className="admin-state-card">Loading registrations…</div>
