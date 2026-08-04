@@ -17,6 +17,7 @@ const trainingRoles = [
 ];
 
 const initialForm = {
+  fullName: '',
   surname: '',
   firstName: '',
   middleName: '',
@@ -42,10 +43,15 @@ const FORM_STEPS = [
 ];
 
 function buildParticipantName(form) {
-  return [form.surname, form.firstName, form.middleName]
+  const nameParts = [form.surname, form.firstName, form.middleName]
     .filter(Boolean)
-    .map((value) => String(value).trim())
-    .join(' ');
+    .map((value) => String(value).trim());
+
+  if (nameParts.length > 0) {
+    return nameParts.join(' ');
+  }
+
+  return String(form.fullName || '').trim();
 }
 
 function EventRegistrationPage() {
@@ -91,7 +97,7 @@ function EventRegistrationPage() {
   const validateStep = (step) => {
     switch (step) {
       case 1:
-        return form.surname.trim() && form.firstName.trim() && form.email.trim() && form.phone.trim();
+        return form.fullName.trim() && form.email.trim() && form.phone.trim();
       case 2:
         return form.role && form.lga.trim();
       case 3:
