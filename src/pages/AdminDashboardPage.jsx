@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import '../css/pages/AdminDashboardPage.css';
 import ConfirmationSlip from '../components/ConfirmationSlip.jsx';
 import { getAllTrainingRegistrations, deleteTrainingRegistration } from '../lib/supabaseClient.js';
+import { filterRegistrations } from '../lib/dashboardFilters.js';
 
 const trackLabels = {
   cinematography: 'Cinematography',
@@ -24,6 +25,7 @@ function formatDate(value) {
     month: 'short',
     day: 'numeric',
   });
+
 }
 
 function AdminDashboardPage({ onLogout }) {
@@ -41,6 +43,7 @@ function AdminDashboardPage({ onLogout }) {
   const [materialsMessage, setMaterialsMessage] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [filterState, setFilterState] = useState({ search: '', track: 'all', status: 'all' });
 
   const escapeHtml = (value = '') =>
     String(value)
@@ -60,7 +63,11 @@ function AdminDashboardPage({ onLogout }) {
   };
 
   const printSelectedSheet = () => {
-    const registrationsToPrint = selectedForPrint.length ? selectedForPrint : selectedRegistration ? [selectedRegistration] : [];
+    const registrationsToPrint = selectedForPrint.length
+      ? filteredRegistrations.filter((registration) => selectedForPrint.includes(registration.id))
+      : selectedRegistration
+      ? [selectedRegistration]
+      : [];
 
     if (!registrationsToPrint.length) {
       return;
@@ -259,7 +266,7 @@ function AdminDashboardPage({ onLogout }) {
       day: 'numeric',
     });
 
-    const rows = registrations.map((registration) => [
+    const rows = filteredRegistrations.map((registration) => [
       registration.full_name || '—',
       registration.role || '—',
       [registration.lga, registration.ward].filter(Boolean).join(' / ') || '—',
@@ -426,6 +433,18 @@ function AdminDashboardPage({ onLogout }) {
     }
   };
 
+  const filteredRegistrations = useMemo(() => {
+    return filterRegistrations(registrations, filterState, trackLabels);
+  }, [filterState, registrations]);
+
+  useEffect(() => {
+    setSelectedForPrint((currentSelection) =>
+      currentSelection.filter((registrationId) =>
+        filteredRegistrations.some((registration) => registration.id === registrationId),
+      ),
+    );
+  }, [filteredRegistrations]);
+
   const selectedSlipData = useMemo(() => {
     if (!selectedRegistration) {
       return null;
@@ -446,6 +465,16 @@ function AdminDashboardPage({ onLogout }) {
       trainingTrack: selectedRegistration.training_track || '',
     };
   }, [materialsByTrack, selectedRegistration]);
+
+  useEffect(() => {
+    if (!selectedRegistration) {
+      return;
+    }
+
+    if (!filteredRegistrations.some((registration) => registration.id === selectedRegistration.id)) {
+      setSelectedRegistration(filteredRegistrations[0] || null);
+    }
+  }, [filteredRegistrations, selectedRegistration]);
 
   return (
     <section className="admin-dashboard-page">
@@ -491,15 +520,15 @@ function AdminDashboardPage({ onLogout }) {
         <div className="admin-metrics">
           <div className="admin-metric-card">
             <span>Total registered</span>
-            <strong>{registrations.length}</strong>
+            <strong>{filteredRegistrations.length}</strong>
           </div>
           <div className="admin-metric-card">
             <span>Needs accommodation</span>
-            <strong>{registrations.filter((row) => row.accommodation_needed).length}</strong>
+            <strong>{filteredRegistrations.filter((row) => row.accommodation_needed).length}</strong>
           </div>
           <div className="admin-metric-card">
             <span>Confirmed codes</span>
-            <strong>{registrations.filter((row) => row.confirmation_code).length}</strong>
+            <strong>{filteredRegistrations.filter((row) => row.confirmation_code).length}</strong>
           </div>
         </div>
 
@@ -566,6 +595,42 @@ function AdminDashboardPage({ onLogout }) {
                 </div>
               )}
 
+              <div className="admin-filters">
+                <label className="admin-filter-field">
+                  <span>Search</span>
+                  <input
+                    type="search"
+                    value={filterState.search}
+                    onChange={(event) => setFilterState((current) => ({ ...current, search: event.target.value }))}
+                    placeholder="Search by name, code, track..."
+                  />
+                </label>
+                <label className="admin-filter-field">
+                  <span>Track</span>
+                  <select
+                    value={filterState.track}
+                    onChange={(event) => setFilterState((current) => ({ ...current, track: event.target.value }))}
+                  >
+                    <option value="all">All tracks</option>
+                    {Object.entries(trackLabels).map(([trackId, label]) => (
+                      <option key={trackId} value={trackId}>{label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="admin-filter-field">
+                  <span>Status</span>
+                  <select
+                    value={filterState.status}
+                    onChange={(event) => setFilterState((current) => ({ ...current, status: event.target.value }))}
+                  >
+                    <option value="all">All statuses</option>
+                    <option value="registered">Registered</option>
+                    <option value="review">Review</option>
+                    <option value="confirmed">Confirmed</option>
+                  </select>
+                </label>
+              </div>
+
               <div className="table-wrapper">
                 <table className="admin-table">
                   <thead>
@@ -574,10 +639,10 @@ function AdminDashboardPage({ onLogout }) {
                         <input
                           type="checkbox"
                           aria-label="Select all registrations"
-                          checked={registrations.length > 0 && selectedForPrint.length === registrations.length}
+                          checked={filteredRegistrations.length > 0 && selectedForPrint.length === filteredRegistrations.length}
                           onChange={(event) => {
                             if (event.target.checked) {
-                              setSelectedForPrint(registrations.map((registration) => registration.id));
+                              setSelectedForPrint(filteredRegistrations.map((registration) => registration.id));
                             } else {
                               setSelectedForPrint([]);
                             }
@@ -594,7 +659,7 @@ function AdminDashboardPage({ onLogout }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {registrations.map((registration) => (
+                    {filteredRegistrations.map((registration) => (
                       <tr
                         key={registration.id}
                         className={selectedRegistration?.id === registration.id ? 'selected-row' : ''}
