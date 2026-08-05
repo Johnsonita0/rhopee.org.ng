@@ -34,10 +34,27 @@ const initialForm = {
   emergencyPhone: '',
   agreeToTerms: false,
   newsletterOptIn: false,
-    return nameParts.join(' ');
+};
+
+const FORM_STEPS = [
+  { id: 1, title: 'Personal' },
+  { id: 2, title: 'Role & Location' },
+  { id: 3, title: 'Training Focus' },
+  { id: 4, title: 'Additional Info' },
+  { id: 5, title: 'Review' },
+];
+
+function buildParticipantName(form) {
+  const nameParts = [form.firstName, form.middleName, form.surname, form.fullName]
+    .filter(Boolean)
+    .map((value) => String(value).trim())
+    .filter(Boolean);
+
+  if (!nameParts.length) {
+    return '';
   }
 
-  return String(form.fullName || '').trim();
+  return nameParts.join(' ');
 }
 
 function EventRegistrationPage() {

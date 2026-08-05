@@ -262,6 +262,12 @@ function App() {
     }
   };
 
+  const handleOnline = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('rhopee:network-online'));
+    }
+  };
+
   useEffect(() => {
     const updateRoute = () => {
       const currentPath = window.location.pathname.toLowerCase();
