@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar.jsx';
 import HomePage from './pages/HomePage.jsx';
 import MorePage from './pages/MorePage.jsx';
@@ -403,10 +403,11 @@ function App() {
         {page === 'event-register' && <EventRegistrationPage />}
       </div>
       <footer className="app-footer">
-        <p>© {new Date().getFullYear()} RHOPEE. Secure member verification for your organization.</p>
+        <p>© {new Date().getFullYear()} RHOPEE. One Nigeria, One People, One Future</p>
       </footer>
     </div>
   );
 }
 
 export default App;
+
