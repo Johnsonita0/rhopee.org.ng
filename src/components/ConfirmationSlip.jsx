@@ -233,7 +233,7 @@ function ConfirmationSlip({ data }) {
 
           <div className="slip-footer">
             <p>© 2026 RHOPEE NEF Akwa Ibom State Chapter | Media Directors Empowerment Training</p>
-            <p className="slip-contact">For assistance: contact@rhopee.org.ng | +234 800 0000 000</p>
+            <p className="slip-contact">For assistance: contact@rhopee.org.ng | +234 812 838 6625</p>
           </div>
         </div>
 
