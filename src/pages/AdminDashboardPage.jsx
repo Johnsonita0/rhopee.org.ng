@@ -65,9 +65,7 @@ function AdminDashboardPage({ onLogout }) {
   const printSelectedSheet = () => {
     const registrationsToPrint = selectedForPrint.length
       ? filteredRegistrations.filter((registration) => selectedForPrint.includes(registration.id))
-      : selectedRegistration
-      ? [selectedRegistration]
-      : [];
+      : filteredRegistrations;
 
     if (!registrationsToPrint.length) {
       return;
