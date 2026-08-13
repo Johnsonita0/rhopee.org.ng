@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar.jsx';
 import HomePage from './pages/HomePage.jsx';
 import MorePage from './pages/MorePage.jsx';
@@ -410,4 +410,3 @@ function App() {
 }
 
 export default App;
-

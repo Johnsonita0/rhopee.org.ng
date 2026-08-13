@@ -4,66 +4,63 @@ function AboutSection() {
   return (
     <section className="about-section" id="about">
       <div className="about-card">
-        <h3>About RHOPEE / NEF</h3>
+        <h3>About T-Shirts Village</h3>
         <p>
-          RHOPEE/NEF is the grassroots mobilization and advocacy arm for the Renewed Hope Agenda in Akwa Ibom State.
-          We deepen, defend, and deliver the agenda of President Bola Ahmed Tinubu GCFR at the ward and LGA level.
+          T-Shirts Village is a leading textile production and manufacturing enterprise specializing in custom design and printing on t-shirts, polo shirts, face caps, and related apparel. 
+          With over 8 years of excellence in the industry, we are committed to training the next generation of skilled artisans and professionals.
         </p>
-        <p className="about-highlight">Motto: ONE NIGERIA</p>
-        <p className="about-highlight">Vision: A politically conscious, empowered, and united grassroots base for sustainable APC governance.</p>
+        <p className="about-highlight">Motto: Quality Craftsmanship, Professional Excellence</p>
+        <p className="about-highlight">Vision: To be the premier training hub for textile production and custom apparel manufacturing in West Africa.</p>
       </div>
 
       <div className="about-group">
         <div className="about-card">
-          <h4>Our Mandate</h4>
+          <h4>Program Highlights</h4>
           <ul>
-            <li>Grassroots Mobilization: Voter education, membership drive, and political sensitization across 31 LGAs & 329 Wards.</li>
-            <li>Policy Advocacy: Explain Federal Government projects in local language.</li>
-            <li>Loyalty & Discipline: Build a disciplined structure that supports party decisions.</li>
-            <li>Data & Feedback: Provide real-time grassroots intelligence to party leadership.</li>
+            <li><strong>Duration:</strong> 6 months intensive training (31 August – 27 February 2027)</li>
+            <li><strong>Registration Fee:</strong> ₦10,000 (covers materials and certification)</li>
+            <li><strong>Training Tracks:</strong> T-shirt Production, Polo Tailoring, Face Cap Manufacturing, Quality & Finishing</li>
+            <li><strong>Expert Trainers:</strong> Industry professionals with 10+ years experience</li>
+            <li><strong>Hands-on Learning:</strong> 70% practical workshops, 30% theory</li>
           </ul>
         </div>
 
         <div className="about-card">
-          <h4>State Structure</h4>
+          <h4>What You'll Learn</h4>
           <ul>
-            <li>State Coordinator: Hon. Churchill Udeme</li>
-            <li>State Exco: 30-member team across key portfolios.</li>
-            <li>31 LGA Coordinators and 5,593 Ward Executives.</li>
-            <li>82,250+ verified grassroots members in Akwa Ibom.</li>
+            <li>Practical textile handling and fabric preparation techniques</li>
+            <li>Professional T-shirt and polo production methods</li>
+            <li>Face cap design and manufacturing process</li>
+            <li>Quality control and finishing techniques</li>
+            <li>Equipment operation and maintenance</li>
+            <li>Workplace safety and professional ethics</li>
           </ul>
         </div>
       </div>
 
       <div className="about-group">
         <div className="about-card">
-          <h4>Q3 2026 Activities</h4>
+          <h4>Who Should Apply</h4>
           <ul>
-            <li>LGA Inauguration Tour for all 31 LGA Coordinators.</li>
-            <li>Ward Sensitization Caravans and townhall meetings.</li>
-            <li>Compliance & Capacity Training for coordinators.</li>
-            <li>Database Harmonization with biometric member capture.</li>
+            <li>Students seeking practical work experience</li>
+            <li>Career changers looking to enter manufacturing</li>
+            <li>Entrepreneurs wanting to start their own production business</li>
+            <li>Corporate employees seeking skill development</li>
+            <li>Anyone passionate about textile and apparel manufacturing</li>
           </ul>
         </div>
 
         <div className="about-card">
-          <h4>Why Partner With Us?</h4>
+          <h4>Program Benefits</h4>
           <ul>
-            <li>Largest boots-on-ground network ready for deployment.</li>
-            <li>Message discipline and real-time narrative control.</li>
-            <li>Direct feedback channel from grassroots to leadership.</li>
-            <li>Voluntary service model with minimal logistics burden.</li>
+            <li>✓ Free comprehensive training for 6 months</li>
+            <li>✓ Industry-recognized certificate upon completion</li>
+            <li>✓ Hands-on experience with professional equipment</li>
+            <li>✓ Networking with industry professionals</li>
+            <li>✓ Career guidance and job placement assistance</li>
+            <li>✓ Opportunity for continued employment</li>
           </ul>
         </div>
-      </div>
-
-      <div className="about-card about-ask">
-        <h4>Our Ask from ALGON</h4>
-        <ol>
-          <li>Recognition as a key grassroots partner in all LGA programs.</li>
-          <li>Audience with LGA Chairmen to align activities.</li>
-          <li>Guidance on areas where our mobilization can support LGA development.</li>
-        </ol>
       </div>
     </section>
   );

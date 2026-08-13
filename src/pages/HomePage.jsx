@@ -1,18 +1,11 @@
 import Banner from '../components/Banner.jsx';
-import Scanner from '../components/Scanner.jsx';
-import ResultCard from '../components/ResultCard.jsx';
+import AboutSection from '../components/AboutSection.jsx';
 
-function HomePage({ scannedCode, verificationResult, loading, error, onScan }) {
+function HomePage() {
   return (
     <main id="home" className="page-content">
       <Banner />
-      <Scanner onScan={onScan} />
-      <ResultCard
-        scannedCode={scannedCode}
-        result={verificationResult}
-        loading={loading}
-        error={error}
-      />
+      <AboutSection />
     </main>
   );
 }

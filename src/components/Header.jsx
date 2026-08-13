@@ -4,10 +4,10 @@ function Header() {
   return (
     <header className="app-header">
       <div>
-        <p className="eyebrow">Rhopee ID Verifier</p>
-        <h1>Secure landing page for barcode verification</h1>
+        <p className="eyebrow">T-Shirts Village Internship</p>
+        <h1>8th Anniversary Free Internship Program</h1>
       </div>
-      <p className="header-note">Scan the barcode to confirm the ID and see verification details instantly.</p>
+      <p className="header-note">Join our 6-month intensive training program in T-shirt production, polo tailoring, and face cap manufacturing.</p>
     </header>
   );
 }
