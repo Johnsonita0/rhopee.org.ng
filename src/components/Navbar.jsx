@@ -67,8 +67,8 @@ function Navbar({ activePage, onNavigate }) {
     <nav className={`top-nav ${collapsed ? 'collapsed' : ''}`}>
       <div className="nav-inner">
         <button className="brand-button" type="button" onClick={() => goToPage('home')}>
-          <img src="/logo/logo1.jpeg" alt="RHOPEE logo" className="brand-logo" />
-          <span>RHOPEE</span>
+          <img src="/logo/logo1.jpeg" alt="T-Shirts Village logo" className="brand-logo" />
+          <span>T-Shirts Village</span>
         </button>
         <button
           className={`nav-toggle ${menuOpen ? 'open' : ''}`}

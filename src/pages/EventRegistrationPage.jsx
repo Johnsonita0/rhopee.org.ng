@@ -6,15 +6,17 @@ import { notifyApplicantRegistration } from '../lib/emailNotification.js';
 import { generateConfirmationCode } from '../lib/confirmationCodeGenerator.js';
 
 const trainingTracks = [
-  { id: 'cinematography', name: 'Cinematography', icon: '🎬' },
-  { id: 'photography', name: 'Photography', icon: '📷' },
-  { id: 'webdev', name: 'Web Development', icon: '💻' },
+  { id: 'tshirt', name: 'T-Shirt Production', icon: '👕' },
+  { id: 'polo', name: 'Polo Shirt Tailoring', icon: '🎖️' },
+  { id: 'facecap', name: 'Face Cap Manufacturing', icon: '🧢' },
+  { id: 'quality', name: 'Quality & Finishing', icon: '✨' },
 ];
 
 const trainingRoles = [
-  'LGA Media Director',
-  'Ward Media Director',
-  'Media Director Coordinator',
+  'Student',
+  'Professional/Career Changer',
+  'Entrepreneur',
+  'Corporate Employee',
 ];
 
 const initialForm = {
@@ -24,14 +26,14 @@ const initialForm = {
   middleName: '',
   email: '',
   phone: '',
-  lga: '',
-  ward: '',
+  state: '',
+  city: '',
   role: trainingRoles[0],
-  trainingTrack: 'cinematography',
-  accommodationNeeded: false,
-  dietary: '',
+  trainingTrack: 'tshirt',
+  workExperience: '',
   emergencyContact: '',
   emergencyPhone: '',
+  paymentConfirmation: '',
   agreeToTerms: false,
   newsletterOptIn: false,
 };
@@ -103,7 +105,7 @@ function EventRegistrationPage() {
       case 1:
         return form.fullName.trim() && form.email.trim() && form.phone.trim();
       case 2:
-        return form.role && form.lga.trim();
+        return form.role && form.state.trim();
       case 3:
         return form.trainingTrack;
       case 4:
@@ -163,15 +165,15 @@ function EventRegistrationPage() {
           full_name: form.fullName || participantName,
           email: form.email,
           phone: form.phone,
-          role: form.role,
-          lga: form.lga,
-          ward: form.ward || null,
+          background: form.role,
+          state: form.state,
+          city: form.city || null,
           training_track: form.trainingTrack,
           training_track_name: trainingTrackName,
-          accommodation_needed: form.accommodationNeeded,
-          dietary_preferences: form.dietary || null,
+          work_experience: form.workExperience || null,
           emergency_contact: form.emergencyContact || null,
           emergency_phone: form.emergencyPhone || null,
+          payment_confirmation: form.paymentConfirmation || null,
           confirmation_code: confirmationCode,
           status: 'registered',
           created_at: new Date().toISOString(),
@@ -224,9 +226,9 @@ function EventRegistrationPage() {
       fullName: buildParticipantName(form),
       email: form.email,
       phone: form.phone,
-      role: form.role,
-      lga: form.lga,
-      ward: form.ward,
+      background: form.role,
+      state: form.state,
+      city: form.city,
       trainingTrack: form.trainingTrack,
       trainingTrackName: form.trainingTrackName,
       confirmationCode: form.confirmationCode,
@@ -239,25 +241,29 @@ function EventRegistrationPage() {
         <div className="event-success-card" style={{ marginTop: '32px' }}>
           <div className="success-badge">✓</div>
           <span className="success-pill">Registration confirmed</span>
-          <h2>Welcome, {form.fullName.split(' ')[0] || 'participant'}!</h2>
-          <p>Your registration for the Media Directors Empowerment Training has been confirmed.</p>
+          <h2>Welcome, {form.fullName.split(' ')[0] || 'intern'}!</h2>
+          <p>Your registration for the T-Shirts Village 8th Anniversary Free Internship Program has been confirmed.</p>
           
           <div className="event-summary">
             <div>
-              <strong>Training Track</strong>
+              <strong>Production Track</strong>
               <p>{form.trainingTrackName}</p>
             </div>
             <div>
-              <strong>Role</strong>
+              <strong>Background</strong>
               <p>{form.role}</p>
             </div>
             <div>
               <strong>Location</strong>
-              <p>{form.lga}{form.ward ? ` - ${form.ward}` : ''}</p>
+              <p>{form.state}{form.city ? ` - ${form.city}` : ''}</p>
+            </div>
+            <div>
+              <strong>Program Duration</strong>
+              <p>6 Months (31 Aug - 27 Feb 2027)</p>
             </div>
           </div>
 
-          <p className="event-details">Check your email at <strong>{form.email}</strong> for detailed logistics, training materials, and final instructions. Your trainee code is <strong>{form.confirmationCode}</strong>.</p>
+          <p className="event-details">Check your email at <strong>{form.email}</strong> for detailed logistics, training materials, schedule, and final instructions. Your registration code is <strong>{form.confirmationCode}</strong>.</p>
           
           <button type="button" className="secondary-btn" onClick={() => {
             setSubmitted(false);
@@ -266,7 +272,7 @@ function EventRegistrationPage() {
             setMessage('');
             setForm(initialForm);
           }}>
-            Register another participant
+            Register another applicant
           </button>
         </div>
       </section>
@@ -277,9 +283,9 @@ function EventRegistrationPage() {
     <section className="event-registration-page">
       <div className="event-panel">
         <div className="event-intro">
-          <span className="success-pill">Media Directors Training</span>
-          <h2>Empowerment Training Registration</h2>
-          <p>Step-by-step registration for the RHOPEE Media Directors empowerment training. Build capacity, enhance creativity, and impact your communities.</p>
+          <span className="success-pill">8th Anniversary Internship</span>
+          <h2>Free Internship Program Registration</h2>
+          <p>Join our 6-month intensive training program in textile production and manufacturing. Learn practical skills in T-shirt production, polo tailoring, face cap manufacturing, and quality finishing from industry experts.</p>
         </div>
 
         {/* Progress Bar */}
@@ -335,12 +341,12 @@ function EventRegistrationPage() {
           {currentStep === 2 && (
             <div className="form-step active">
               <div className="step-header">
-                <h3>Role & Location</h3>
-                <p>Your position and assignment area</p>
+                <h3>Background & Location</h3>
+                <p>Your background and where you're applying from</p>
               </div>
               <div className="form-grid">
                 <label className="full-width">
-                  Role in RHOPEE *
+                  What best describes you? *
                   <select name="role" value={form.role} onChange={handleChange} required>
                     {trainingRoles.map((role) => (
                       <option key={role} value={role}>{role}</option>
@@ -349,13 +355,13 @@ function EventRegistrationPage() {
                 </label>
 
                 <label className="full-width">
-                  Local Government Area (LGA) *
-                  <input name="lga" value={form.lga} onChange={handleChange} placeholder="e.g., Uyo, Eket, Ikot Ekpene" required />
+                  State *
+                  <input name="state" value={form.state} onChange={handleChange} placeholder="e.g., Lagos, Akwa Ibom, Oyo" required />
                 </label>
 
                 <label className="full-width">
-                  Ward (if applicable)
-                  <input name="ward" value={form.ward} onChange={handleChange} placeholder="Ward name" />
+                  City
+                  <input name="city" value={form.city} onChange={handleChange} placeholder="City name" />
                 </label>
               </div>
             </div>
@@ -392,28 +398,28 @@ function EventRegistrationPage() {
           {currentStep === 4 && (
             <div className="form-step active">
               <div className="step-header">
-                <h3>Additional Information</h3>
-                <p>Special requirements and emergency contact</p>
+                <h3>Experience & Contact</h3>
+                <p>Your experience and emergency information</p>
               </div>
               <div className="form-grid">
                 <label className="full-width">
-                  Emergency contact name
+                  Work/Industry Experience (if any)
+                  <textarea name="workExperience" value={form.workExperience} onChange={handleChange} rows="3" placeholder="Tell us about your work experience or why you're interested in this internship..." />
+                </label>
+
+                <label className="full-width">
+                  Emergency Contact Name
                   <input name="emergencyContact" value={form.emergencyContact} onChange={handleChange} placeholder="Contact name" />
                 </label>
 
                 <label className="full-width">
-                  Emergency phone number
+                  Emergency Phone Number
                   <input name="emergencyPhone" value={form.emergencyPhone} onChange={handleChange} placeholder="0803 000 0000" />
                 </label>
 
-                <label className="checkbox-row full-width">
-                  <input type="checkbox" name="accommodationNeeded" checked={form.accommodationNeeded} onChange={handleChange} />
-                  I need accommodation during the training period
-                </label>
-
                 <label className="full-width">
-                  Dietary preferences or restrictions
-                  <textarea name="dietary" value={form.dietary} onChange={handleChange} rows="3" placeholder="e.g., vegetarian, allergies, etc." />
+                  Payment Confirmation Reference
+                  <input name="paymentConfirmation" value={form.paymentConfirmation} onChange={handleChange} placeholder="Enter your payment reference number (₦10,000)" />
                 </label>
               </div>
             </div>
@@ -430,37 +436,42 @@ function EventRegistrationPage() {
               <div className="attestation-card">
                 <div className="attestation-header">
                   <span className="attestation-seal">⭐</span>
-                  <h4>Training Agreement</h4>
+                  <h4>Internship Agreement</h4>
                 </div>
                 
                 <div className="attestation-content">
                   <p className="attestation-intro">This is to certify that</p>
                   <p className="attestation-name">{buildParticipantName(form) || '___________________'}</p>
-                  <p className="attestation-text">has voluntarily registered for the <strong>RHOPEE NEF Akwa Ibom State Chapter</strong> Media Directors Empowerment Training in <strong>{trainingTracks.find(t => t.id === form.trainingTrack)?.name || 'a training track'}</strong>.</p>
+                  <p className="attestation-text">has voluntarily registered for the <strong>T-Shirts Village 8th Anniversary Free Internship Program</strong> in <strong>{trainingTracks.find(t => t.id === form.trainingTrack)?.name || 'a production track'}</strong>.</p>
                   
                   <div className="attestation-details">
                     <div className="detail-row">
-                      <span className="detail-label">Training Period:</span>
-                      <span className="detail-value">24 August – 5 September 2026</span>
+                      <span className="detail-label">Program Duration:</span>
+                      <span className="detail-value">6 Months (31 August – 27 February 2027)</span>
                     </div>
                     <div className="detail-row">
-                      <span className="detail-label">Role:</span>
+                      <span className="detail-label">Background:</span>
                       <span className="detail-value">{form.role}</span>
                     </div>
                     <div className="detail-row">
                       <span className="detail-label">Location:</span>
-                      <span className="detail-value">{form.lga}{form.ward ? `, ${form.ward}` : ''}</span>
+                      <span className="detail-value">{form.state}{form.city ? `, ${form.city}` : ''}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Registration Fee:</span>
+                      <span className="detail-value">₦10,000 (Paid)</span>
                     </div>
                   </div>
 
                   <div className="attestation-agreement">
-                    <p className="agreement-title">As a registered participant, I agree to:</p>
+                    <p className="agreement-title">As a registered intern, I agree to:</p>
                     <ul>
-                      <li>Attend all training sessions from 9:00 AM daily</li>
-                      <li>Complete all assigned training modules and activities</li>
-                      <li>Adhere to the training code of conduct and facility rules</li>
-                      <li>Participate actively and contribute to group discussions</li>
-                      <li>Apply the skills learned to enhance digital media capacity in my community</li>
+                      <li>Attend all training sessions and complete the full 6-month program</li>
+                      <li>Participate actively in all practical workshops and hands-on activities</li>
+                      <li>Master the fundamentals of textile production and manufacturing techniques</li>
+                      <li>Adhere to workplace safety standards and facility rules</li>
+                      <li>Maintain professionalism, punctuality, and code of conduct</li>
+                      <li>Contribute to team projects and share knowledge with fellow interns</li>
                     </ul>
                   </div>
                 </div>
@@ -468,12 +479,12 @@ function EventRegistrationPage() {
 
               <label className="checkbox-row agreement-checkbox full-width">
                 <input type="checkbox" name="agreeToTerms" checked={form.agreeToTerms} onChange={handleChange} required />
-                I confirm that I have read and agree to all the terms of this training agreement. *
+                I confirm that I have read and agree to all terms of this internship agreement. *
               </label>
 
               <label className="checkbox-row agreement-checkbox full-width">
                 <input type="checkbox" name="newsletterOptIn" checked={form.newsletterOptIn} onChange={handleChange} />
-                Yes, subscribe me to event updates and newsletter emails.
+                Yes, subscribe me to program updates and news from T-Shirts Village.
               </label>
 
               {message && <p className="form-error">{message}</p>}

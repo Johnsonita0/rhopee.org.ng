@@ -19,7 +19,7 @@
 .app-footer {
   margin-top: 28px;
   padding: 18px 0;
-  color: #4c6d55;
+  color: #5a6d80;
   text-align: center;
   font-size: 0.95rem;
 }
@@ -53,7 +53,7 @@
   border-radius: 24px;
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: 0 16px 44px rgba(15, 95, 43, 0.07);
+  box-shadow: 0 16px 44px rgba(0, 61, 153, 0.07);
 }
 
 .hero-card h2 {
