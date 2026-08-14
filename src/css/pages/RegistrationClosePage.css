@@ -1,0 +1,236 @@
+.registration-close-page {
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 28px 20px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-card {
+  border-radius: 30px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(242, 249, 238, 0.98));
+  border: 1px solid rgba(211, 47, 47, 0.16);
+  box-shadow: 0 28px 100px rgba(211, 47, 47, 0.08);
+  padding: 40px 28px;
+  display: grid;
+  gap: 32px;
+  text-align: center;
+}
+
+.close-illustration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.close-illustration svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Animation for the closed sign */
+@keyframes pulse-closed {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 rgba(211, 47, 47, 0.3));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 20px rgba(211, 47, 47, 0.5));
+  }
+}
+
+.closed-sign-animation {
+  animation: pulse-closed 2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.close-content h1 {
+  margin: 0;
+  color: #d32f2f;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.close-subtitle {
+  color: #666;
+  font-size: 1.1rem;
+  margin: 0 0 24px 0;
+  font-style: italic;
+}
+
+.close-message {
+  background: rgba(211, 47, 47, 0.05);
+  border-left: 4px solid #d32f2f;
+  border-radius: 8px;
+  padding: 24px;
+  margin: 24px 0;
+  text-align: left;
+}
+
+.close-message p {
+  color: #333;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+  font-size: 0.95rem;
+}
+
+.close-message p:last-child {
+  margin-bottom: 0;
+}
+
+.close-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 32px 0;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 14px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0f5f2b, #1a7c3a);
+  color: white;
+  box-shadow: 0 4px 15px rgba(15, 95, 43, 0.2);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(15, 95, 43, 0.3);
+  background: linear-gradient(135deg, #1a7c3a, #0f5f2b);
+}
+
+.btn-secondary {
+  background: rgba(211, 47, 47, 0.1);
+  color: #d32f2f;
+  border: 2px solid #d32f2f;
+}
+
+.btn-secondary:hover {
+  background: #d32f2f;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(211, 47, 47, 0.3);
+}
+
+.close-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.info-item {
+  background: linear-gradient(135deg, rgba(15, 95, 43, 0.05), rgba(211, 47, 47, 0.05));
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  gap: 12px;
+  text-align: left;
+  border: 1px solid rgba(15, 95, 43, 0.1);
+  transition: all 0.3s ease;
+}
+
+.info-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(15, 95, 43, 0.1);
+}
+
+.info-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.info-item h4 {
+  margin: 0 0 4px 0;
+  color: #0f5f2b;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.info-item p {
+  margin: 0;
+  color: #666;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .registration-close-page {
+    padding: 16px;
+  }
+
+  .close-card {
+    padding: 24px 16px;
+    gap: 24px;
+  }
+
+  .close-content h1 {
+    font-size: 1.8rem;
+  }
+
+  .close-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .close-info {
+    grid-template-columns: 1fr;
+  }
+
+  .close-illustration svg {
+    width: 240px;
+    height: 240px;
+  }
+
+  .close-message {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .close-content h1 {
+    font-size: 1.5rem;
+  }
+
+  .close-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 12px 20px;
+    font-size: 0.9rem;
+  }
+
+  .info-item h4 {
+    font-size: 0.9rem;
+  }
+
+  .info-item p {
+    font-size: 0.8rem;
+  }
+
+  .close-illustration svg {
+    width: 200px;
+    height: 200px;
+  }
+}

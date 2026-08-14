@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage.jsx';
 import MorePage from './pages/MorePage.jsx';
 import RegistrationPage from './pages/RegistrationPage.jsx';
 import EventRegistrationPage from './pages/EventRegistrationPage.jsx';
+import RegistrationClosePage from './pages/RegistrationClosePage.jsx';
 import VerificationStatusPage from './pages/VerificationStatusPage.jsx';
 import AdminLoginPage from './pages/AdminLoginPage.jsx';
 import AdminDashboardPage from './pages/AdminDashboardPage.jsx';
@@ -294,6 +295,8 @@ function App() {
         setPage('register');
       } else if (currentPath === '/event-register' || currentPath === '/rhoppe_training') {
         setPage('event-register');
+      } else if (currentPath === '/registration-closed' || currentPath === '/registration-close') {
+        setPage('registration-closed');
       } else if (currentHash === '#more' || ['#gallery', '#news', '#contact'].includes(currentHash)) {
         setPage('more');
       } else if (currentHash === '#verify-status') {
@@ -401,6 +404,7 @@ function App() {
         {page === 'more' && <MorePage />}
         {page === 'register' && <RegistrationPage />}
         {page === 'event-register' && <EventRegistrationPage />}
+        {page === 'registration-closed' && <RegistrationClosePage />}
       </div>
       <footer className="app-footer">
         <p>© {new Date().getFullYear()} RHOPEE. One Nigeria, One People, One Future</p>
