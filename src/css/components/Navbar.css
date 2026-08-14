@@ -71,6 +71,19 @@
   transform: translateY(-1px);
 }
 
+.nav-links button:disabled,
+.nav-links button.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.nav-links button:disabled:hover,
+.nav-links button.disabled:hover {
+  background: transparent;
+  transform: none;
+}
+
 .nav-toggle {
   display: none;
   border: none;

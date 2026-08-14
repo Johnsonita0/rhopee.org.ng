@@ -9,6 +9,7 @@ import VerificationStatusPage from './pages/VerificationStatusPage.jsx';
 import AdminLoginPage from './pages/AdminLoginPage.jsx';
 import AdminDashboardPage from './pages/AdminDashboardPage.jsx';
 import { ALLOWED_ADMIN_USER_ID, getAdminSession, signOutAdmin, verifyIdCode } from './lib/supabaseClient.js';
+import { isRegistrationOpen } from './lib/registrationStatus.js';
 import './css/App.css';
 import { decodeVerificationPayload, encodeVerificationPayload, parseScannableQrValue } from './lib/verificationPayload.js';
 
@@ -19,6 +20,7 @@ function App() {
   const [error, setError] = useState('');
   const [page, setPage] = useState('home');
   const [scannedMemberData, setScannedMemberData] = useState(null);
+  const [registrationOpen, setRegistrationOpen] = useState(() => isRegistrationOpen());
   const [adminAuthenticated, setAdminAuthenticated] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
@@ -293,9 +295,9 @@ function App() {
 
       if (currentPath === '/register') {
         setPage('register');
-      } else if (currentPath === '/event-register' || currentPath === '/rhoppe_training') {
+      } else if (currentPath === '/event-register') {
         setPage('event-register');
-      } else if (currentPath === '/registration-closed' || currentPath === '/registration-close') {
+      } else if (currentPath === '/rhoppe_training' || currentPath === '/registration-closed' || currentPath === '/registration-close') {
         setPage('registration-closed');
       } else if (currentHash === '#more' || ['#gallery', '#news', '#contact'].includes(currentHash)) {
         setPage('more');
@@ -365,6 +367,27 @@ function App() {
     };
   }, []);
 
+  // Listen for registration status changes
+  useEffect(() => {
+    const handleRegistrationStatusChange = (event) => {
+      const newStatus = event.detail?.isOpen ?? isRegistrationOpen();
+      setRegistrationOpen(newStatus);
+      
+      // If user is on event-register page and registration closes, redirect to closed page
+      if (!newStatus && page === 'event-register') {
+        setPage('registration-closed');
+        if (typeof window !== 'undefined') {
+          window.history.replaceState({}, '', '/registration-closed');
+        }
+      }
+    };
+
+    window.addEventListener('rhopee:registration-status-changed', handleRegistrationStatusChange);
+    return () => {
+      window.removeEventListener('rhopee:registration-status-changed', handleRegistrationStatusChange);
+    };
+  }, [page]);
+
   if (routeMode === 'verify') {
     return (
       <VerificationStatusPage
@@ -384,7 +407,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <Navbar activePage={page} onNavigate={setPage} />
+      <Navbar activePage={page} onNavigate={setPage} registrationOpen={registrationOpen} />
       <div className="app-main-content">
         {page === 'home' && (
           <HomePage
