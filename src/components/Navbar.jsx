@@ -67,8 +67,8 @@ function Navbar({ activePage, onNavigate }) {
     <nav className={`top-nav ${collapsed ? 'collapsed' : ''}`}>
       <div className="nav-inner">
         <button className="brand-button" type="button" onClick={() => goToPage('home')}>
-          <img src="/logo/logo1.jpeg" alt="T-Shirts Village logo" className="brand-logo" />
-          <span>T-Shirts Village</span>
+          <img src="/logo/logo1.jpeg" alt="RHOPEE logo" className="brand-logo" />
+          <span>RHOPEE</span>
         </button>
         <button
           className={`nav-toggle ${menuOpen ? 'open' : ''}`}
@@ -119,6 +119,21 @@ function Navbar({ activePage, onNavigate }) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6"/><path d="M19 12a7 7 0 10-14 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </span>
           <span className="link-text">More</span>
+        </button>
+        <button
+          type="button"
+          className={activePage === 'registration-closed' ? 'active' : ''}
+          onClick={() => {
+            window.history.pushState({}, '', '/registration-closed');
+            onNavigate('registration-closed');
+            closeMenu();
+          }}
+          title="Registration Closed"
+        >
+          <span className="nav-icon" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.6"/><path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+          </span>
+          <span className="link-text">Closed</span>
         </button>
       </div>
       <button

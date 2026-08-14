@@ -4,10 +4,10 @@ function Header() {
   return (
     <header className="app-header">
       <div>
-        <p className="eyebrow">T-Shirts Village Internship</p>
-        <h1>8th Anniversary Free Internship Program</h1>
+        <p className="eyebrow">RHOPEE Training Platform</p>
+        <h1>Professional Skills Development</h1>
       </div>
-      <p className="header-note">Join our 6-month intensive training program in T-shirt production, polo tailoring, and face cap manufacturing.</p>
+      <p className="header-note">Develop professional competencies with our industry-standard training programs and earn recognized certifications.</p>
     </header>
   );
 }

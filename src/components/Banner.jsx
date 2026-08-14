@@ -4,11 +4,11 @@ function Banner() {
   return (
     <section className="hero-banner" id="home">
       <div className="hero-banner-content">
-        <p className="hero-eyebrow">T-Shirts Village 8th Anniversary</p>
-        <h2>Join Our Free 6-Month Internship Program</h2>
+        <p className="hero-eyebrow">RHOPEE Professional Development</p>
+        <h2>Professional Skills Training & Development</h2>
         <p className="hero-copy">
-          Learn professional textile production, T-shirt manufacturing, polo tailoring, and face cap production from industry experts. 
-          Limited slots available. Registration deadline: 27th August. Classes start 31st August.
+          Develop professional skills with industry experts through our comprehensive training programs. 
+          Earn recognized certifications. Limited slots available. Register today for the next cohort.
         </p>
         <div className="hero-actions">
           <a className="button primary-button" href="#registration">Register Now</a>

@@ -6,10 +6,10 @@ import { notifyApplicantRegistration } from '../lib/emailNotification.js';
 import { generateConfirmationCode } from '../lib/confirmationCodeGenerator.js';
 
 const trainingTracks = [
-  { id: 'tshirt', name: 'T-Shirt Production', icon: '👕' },
-  { id: 'polo', name: 'Polo Shirt Tailoring', icon: '🎖️' },
-  { id: 'facecap', name: 'Face Cap Manufacturing', icon: '🧢' },
-  { id: 'quality', name: 'Quality & Finishing', icon: '✨' },
+  { id: 'general', name: 'General Professional Development', icon: '📚' },
+  { id: 'technical', name: 'Technical Skills Training', icon: '⚙️' },
+  { id: 'management', name: 'Business & Management', icon: '📊' },
+  { id: 'leadership', name: 'Leadership Development', icon: '👥' },
 ];
 
 const trainingRoles = [
@@ -29,7 +29,7 @@ const initialForm = {
   state: '',
   city: '',
   role: trainingRoles[0],
-  trainingTrack: 'tshirt',
+  trainingTrack: 'general',
   workExperience: '',
   emergencyContact: '',
   emergencyPhone: '',
@@ -242,7 +242,7 @@ function EventRegistrationPage() {
           <div className="success-badge">✓</div>
           <span className="success-pill">Registration confirmed</span>
           <h2>Welcome, {form.fullName.split(' ')[0] || 'intern'}!</h2>
-          <p>Your registration for the T-Shirts Village 8th Anniversary Free Internship Program has been confirmed.</p>
+          <p>Your registration for the RHOPEE Professional Development Program has been confirmed.</p>
           
           <div className="event-summary">
             <div>
@@ -283,9 +283,9 @@ function EventRegistrationPage() {
     <section className="event-registration-page">
       <div className="event-panel">
         <div className="event-intro">
-          <span className="success-pill">8th Anniversary Internship</span>
-          <h2>Free Internship Program Registration</h2>
-          <p>Join our 6-month intensive training program in textile production and manufacturing. Learn practical skills in T-shirt production, polo tailoring, face cap manufacturing, and quality finishing from industry experts.</p>
+          <span className="success-pill">Professional Development Program</span>
+          <h2>Professional Skills Training Registration</h2>
+          <p>Join our comprehensive professional development training programs. Learn practical skills from industry experts and earn recognized certifications in various professional disciplines.</p>
         </div>
 
         {/* Progress Bar */}
@@ -442,7 +442,7 @@ function EventRegistrationPage() {
                 <div className="attestation-content">
                   <p className="attestation-intro">This is to certify that</p>
                   <p className="attestation-name">{buildParticipantName(form) || '___________________'}</p>
-                  <p className="attestation-text">has voluntarily registered for the <strong>T-Shirts Village 8th Anniversary Free Internship Program</strong> in <strong>{trainingTracks.find(t => t.id === form.trainingTrack)?.name || 'a production track'}</strong>.</p>
+                  <p className="attestation-text">has voluntarily registered for the <strong>RHOPEE Professional Development Program</strong> in <strong>{trainingTracks.find(t => t.id === form.trainingTrack)?.name || 'a professional track'}</strong>.</p>
                   
                   <div className="attestation-details">
                     <div className="detail-row">
@@ -484,7 +484,7 @@ function EventRegistrationPage() {
 
               <label className="checkbox-row agreement-checkbox full-width">
                 <input type="checkbox" name="newsletterOptIn" checked={form.newsletterOptIn} onChange={handleChange} />
-                Yes, subscribe me to program updates and news from T-Shirts Village.
+                Yes, subscribe me to program updates and news from RHOPEE.
               </label>
 
               {message && <p className="form-error">{message}</p>}

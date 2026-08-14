@@ -4,9 +4,9 @@ function AboutSection() {
   return (
     <section className="about-section" id="about">
       <div className="about-card">
-        <h3>About T-Shirts Village</h3>
+        <h3>About RHOPEE</h3>
         <p>
-          T-Shirts Village is a leading textile production and manufacturing enterprise specializing in custom design and printing on t-shirts, polo shirts, face caps, and related apparel. 
+          RHOPEE is dedicated to professional development and skills training, providing industry-standard programs and certifications for individuals looking to advance their careers. 
           With over 8 years of excellence in the industry, we are committed to training the next generation of skilled artisans and professionals.
         </p>
         <p className="about-highlight">Motto: Quality Craftsmanship, Professional Excellence</p>
@@ -19,7 +19,7 @@ function AboutSection() {
           <ul>
             <li><strong>Duration:</strong> 6 months intensive training (31 August – 27 February 2027)</li>
             <li><strong>Registration Fee:</strong> ₦10,000 (covers materials and certification)</li>
-            <li><strong>Training Tracks:</strong> T-shirt Production, Polo Tailoring, Face Cap Manufacturing, Quality & Finishing</li>
+            <li><strong>Training Tracks:</strong> Professional Development, Technical Skills, Business Management, Quality Assurance</li>
             <li><strong>Expert Trainers:</strong> Industry professionals with 10+ years experience</li>
             <li><strong>Hands-on Learning:</strong> 70% practical workshops, 30% theory</li>
           </ul>
@@ -29,7 +29,7 @@ function AboutSection() {
           <h4>What You'll Learn</h4>
           <ul>
             <li>Practical textile handling and fabric preparation techniques</li>
-            <li>Professional T-shirt and polo production methods</li>
+            <li>Professional industry-standard methodologies and best practices</li>
             <li>Face cap design and manufacturing process</li>
             <li>Quality control and finishing techniques</li>
             <li>Equipment operation and maintenance</li>
