@@ -50,6 +50,14 @@ function notifyRegistrationChange() {
   window.dispatchEvent(new CustomEvent('rhopee:registrations-updated'));
 }
 
+function notifyFeedbackChange() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.dispatchEvent(new CustomEvent('rhopee:feedback-updated'));
+}
+
 async function findDuplicateRegistrationByEmail(email) {
   const normalizedEmail = normalizeEmail(email);
   if (!normalizedEmail || missingSupabaseConfig || !supabase) {
@@ -159,6 +167,10 @@ export async function saveClassFeedback(feedback) {
         p_challenges: feedback.challenges,
         p_additional_notes: feedback.additional_notes,
       });
+
+    if (!error) {
+      notifyFeedbackChange();
+    }
 
     return { data, error };
   } catch (error) {

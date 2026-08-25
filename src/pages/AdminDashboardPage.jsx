@@ -378,7 +378,18 @@ function AdminDashboardPage({ onLogout }) {
     };
 
     loadFeedback();
-    return () => { isMounted = false; };
+
+    const handleFeedbackUpdated = () => loadFeedback();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('rhopee:feedback-updated', handleFeedbackUpdated);
+    }
+
+    return () => {
+      isMounted = false;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('rhopee:feedback-updated', handleFeedbackUpdated);
+      }
+    };
   }, [activeTab]);
 
   useEffect(() => {
