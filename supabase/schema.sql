@@ -194,7 +194,7 @@ SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
 BEGIN
-  IF auth.uid() IS DISTINCT FROM 'a9044df5-bf6b-42be-95d1-1f4337b2ff33'::uuid THEN
+  IF auth.uid() IS NULL THEN
     RAISE EXCEPTION 'Not authorized to view class feedback';
   END IF;
 
