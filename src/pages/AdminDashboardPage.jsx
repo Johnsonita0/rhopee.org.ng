@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import '../css/pages/AdminDashboardPage.css';
 import ConfirmationSlip from '../components/ConfirmationSlip.jsx';
-import { getAllTrainingRegistrations, getAllClassFeedback, deleteTrainingRegistration } from '../lib/supabaseClient.js';
+import { getAllTrainingRegistrations, getAllClassFeedback, deleteClassFeedback, deleteTrainingRegistration } from '../lib/supabaseClient.js';
 import { filterRegistrations } from '../lib/dashboardFilters.js';
 
 const trackLabels = {
@@ -48,6 +48,7 @@ function AdminDashboardPage({ onLogout }) {
   const [feedback, setFeedback] = useState([]);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState('');
+  const [deletingFeedbackId, setDeletingFeedbackId] = useState(null);
 
   const escapeHtml = (value = '') =>
     String(value)
@@ -401,6 +402,25 @@ function AdminDashboardPage({ onLogout }) {
     };
   }, [activeTab]);
 
+  const handleDeleteFeedback = async (entry) => {
+    if (!window.confirm(`Delete feedback from ${entry.student_name || 'this student'}? This cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingFeedbackId(entry.id);
+    setFeedbackError('');
+    const { error: deleteError } = await deleteClassFeedback(entry.id);
+
+    if (deleteError) {
+      setFeedbackError(deleteError.message || 'Unable to delete class feedback.');
+      setDeletingFeedbackId(null);
+      return;
+    }
+
+    setFeedback((current) => current.filter((feedbackEntry) => feedbackEntry.id !== entry.id));
+    setDeletingFeedbackId(null);
+  };
+
   useEffect(() => {
     let isMounted = true;
     let toastTimer = null;
@@ -569,7 +589,12 @@ function AdminDashboardPage({ onLogout }) {
                         <h3>{entry.student_name}</h3>
                         <p>{entry.training_track_name || trackLabels[entry.training_track]} · {entry.gender || 'Gender not provided'} · {formatDate(entry.class_date)}</p>
                       </div>
-                      <span className="feedback-rating">{entry.class_rating}/5</span>
+                      <div className="feedback-response-actions">
+                        <span className="feedback-rating">{entry.class_rating}/5</span>
+                        <button type="button" className="feedback-delete-btn" onClick={() => handleDeleteFeedback(entry)} disabled={deletingFeedbackId === entry.id}>
+                          {deletingFeedbackId === entry.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
                     </div>
                     <div className="feedback-response-grid">
                       <div><strong>Favourite moment</strong><p>{entry.favourite_moment}</p></div>

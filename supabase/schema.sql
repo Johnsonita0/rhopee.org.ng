@@ -208,6 +208,24 @@ $$;
 REVOKE ALL ON FUNCTION public.get_class_feedback() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_class_feedback() TO authenticated;
 
+CREATE OR REPLACE FUNCTION public.delete_class_feedback(p_feedback_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authorized to delete class feedback';
+  END IF;
+
+  DELETE FROM public.class_feedback WHERE id = p_feedback_id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.delete_class_feedback(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.delete_class_feedback(uuid) TO authenticated;
+
 -- =====================================================
 -- Verification
 -- =====================================================

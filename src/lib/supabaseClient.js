@@ -192,6 +192,21 @@ export async function getAllClassFeedback() {
   }
 }
 
+export async function deleteClassFeedback(feedbackId) {
+  if (missingSupabaseConfig || !supabase) {
+    return { error: new Error('Supabase is not configured.') };
+  }
+
+  try {
+    const { error } = await supabase.rpc('delete_class_feedback', {
+      p_feedback_id: feedbackId,
+    });
+    return { error };
+  } catch (error) {
+    return { error: new Error('Unable to delete class feedback. Please try again.') };
+  }
+}
+
 export async function deleteTrainingRegistration(registrationId) {
   if (String(registrationId || '').startsWith('local-')) {
     return {
