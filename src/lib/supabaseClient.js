@@ -147,10 +147,18 @@ export async function saveClassFeedback(feedback) {
 
   try {
     const { data, error } = await supabase
-      .from('class_feedback')
-      .insert(feedback)
-      .select()
-      .single();
+      .rpc('submit_class_feedback', {
+        p_student_name: feedback.student_name,
+        p_gender: feedback.gender,
+        p_training_track: feedback.training_track,
+        p_training_track_name: feedback.training_track_name,
+        p_class_date: feedback.class_date,
+        p_class_rating: feedback.class_rating,
+        p_favourite_moment: feedback.favourite_moment,
+        p_class_spirit: feedback.class_spirit,
+        p_challenges: feedback.challenges,
+        p_additional_notes: feedback.additional_notes,
+      });
 
     return { data, error };
   } catch (error) {
