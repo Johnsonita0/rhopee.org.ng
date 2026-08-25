@@ -137,11 +137,12 @@ DROP POLICY IF EXISTS "Allow public feedback insert" ON public.class_feedback;
 DROP POLICY IF EXISTS "Allow authenticated feedback select" ON public.class_feedback;
 
 CREATE POLICY "Allow public feedback insert" ON public.class_feedback
-FOR INSERT TO anon, authenticated WITH CHECK (true);
+FOR INSERT TO public WITH CHECK (true);
 
 CREATE POLICY "Allow authenticated feedback select" ON public.class_feedback
 FOR SELECT TO authenticated USING (true);
 
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT INSERT ON public.class_feedback TO anon, authenticated;
 GRANT SELECT ON public.class_feedback TO authenticated;
 
