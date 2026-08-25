@@ -120,6 +120,21 @@ function Navbar({ activePage, onNavigate }) {
           </span>
           <span className="link-text">More</span>
         </button>
+        <button
+          type="button"
+          className={activePage === 'feedback' ? 'active' : ''}
+          onClick={() => {
+            window.history.pushState({}, '', '/feedback');
+            onNavigate('feedback');
+            closeMenu();
+          }}
+          title="Class feedback"
+        >
+          <span className="nav-icon" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3h9A2.5 2.5 0 0 1 19 5.5v8a2.5 2.5 0 0 1-2.5 2.5H12l-4.5 4v-4h0A2.5 2.5 0 0 1 5 13.5v-8Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M8 8h8M8 11h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+          </span>
+          <span className="link-text">Class feedback</span>
+        </button>
       </div>
       <button
         type="button"

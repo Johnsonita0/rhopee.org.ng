@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import '../css/pages/AdminDashboardPage.css';
 import ConfirmationSlip from '../components/ConfirmationSlip.jsx';
-import { getAllTrainingRegistrations, deleteTrainingRegistration } from '../lib/supabaseClient.js';
+import { getAllTrainingRegistrations, getAllClassFeedback, deleteTrainingRegistration } from '../lib/supabaseClient.js';
 import { filterRegistrations } from '../lib/dashboardFilters.js';
 
 const trackLabels = {
@@ -44,6 +44,10 @@ function AdminDashboardPage({ onLogout }) {
   const [toastMessage, setToastMessage] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [filterState, setFilterState] = useState({ search: '', track: 'all', status: 'all' });
+  const [activeTab, setActiveTab] = useState('registrations');
+  const [feedback, setFeedback] = useState([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState('');
 
   const escapeHtml = (value = '') =>
     String(value)
@@ -355,6 +359,29 @@ function AdminDashboardPage({ onLogout }) {
   }, []);
 
   useEffect(() => {
+    if (activeTab !== 'feedback') {
+      return;
+    }
+
+    let isMounted = true;
+    const loadFeedback = async () => {
+      setFeedbackLoading(true);
+      setFeedbackError('');
+      const { data, error: fetchError } = await getAllClassFeedback();
+      if (!isMounted) return;
+      if (fetchError) {
+        setFeedbackError(fetchError.message || 'Unable to load class feedback.');
+      } else {
+        setFeedback(data || []);
+      }
+      setFeedbackLoading(false);
+    };
+
+    loadFeedback();
+    return () => { isMounted = false; };
+  }, [activeTab]);
+
+  useEffect(() => {
     let isMounted = true;
     let toastTimer = null;
 
@@ -487,6 +514,56 @@ function AdminDashboardPage({ onLogout }) {
             Logout
           </button>
         </div>
+
+        <div className="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
+          <button type="button" role="tab" aria-selected={activeTab === 'registrations'} className={activeTab === 'registrations' ? 'active' : ''} onClick={() => setActiveTab('registrations')}>
+            Registrations
+          </button>
+          <button type="button" role="tab" aria-selected={activeTab === 'feedback'} className={activeTab === 'feedback' ? 'active' : ''} onClick={() => setActiveTab('feedback')}>
+            Class feedback
+          </button>
+        </div>
+
+        {activeTab === 'feedback' ? (
+          <div className="feedback-dashboard-card">
+            <div className="table-toolbar">
+              <div className="table-toolbar-copy">
+                <p className="admin-eyebrow dashboard-eyebrow">Student pulse</p>
+                <h2>Daily class feedback</h2>
+                <p>Read how each track is landing and spot challenges that need attention.</p>
+              </div>
+              <div className="feedback-count">{feedback.length} responses</div>
+            </div>
+            {feedbackLoading ? (
+              <div className="admin-state-card">Loading class feedback...</div>
+            ) : feedbackError ? (
+              <div className="admin-state-card form-error">{feedbackError}</div>
+            ) : feedback.length === 0 ? (
+              <div className="admin-state-card">No class feedback has been submitted yet.</div>
+            ) : (
+              <div className="feedback-list">
+                {feedback.map((entry) => (
+                  <article className="feedback-response" key={entry.id}>
+                    <div className="feedback-response-header">
+                      <div>
+                        <h3>{entry.student_name}</h3>
+                        <p>{entry.training_track_name || trackLabels[entry.training_track]} · {entry.gender || 'Gender not provided'} · {formatDate(entry.class_date)}</p>
+                      </div>
+                      <span className="feedback-rating">{entry.class_rating}/5</span>
+                    </div>
+                    <div className="feedback-response-grid">
+                      <div><strong>Favourite moment</strong><p>{entry.favourite_moment}</p></div>
+                      <div><strong>Class spirit</strong><p>{entry.class_spirit}</p></div>
+                      <div><strong>Challenges</strong><p>{entry.challenges || 'None shared'}</p></div>
+                      {entry.additional_notes ? <div><strong>Additional note</strong><p>{entry.additional_notes}</p></div> : null}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
 
         <div className="admin-materials-card">
           <div className="admin-materials-card-header">
@@ -696,6 +773,8 @@ function AdminDashboardPage({ onLogout }) {
               </div>
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
 

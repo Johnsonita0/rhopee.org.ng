@@ -137,6 +137,45 @@ export async function saveTrainingRegistration(registration) {
   }
 }
 
+export async function saveClassFeedback(feedback) {
+  if (missingSupabaseConfig || !supabase) {
+    return {
+      data: null,
+      error: new Error('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'),
+    };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('class_feedback')
+      .insert(feedback)
+      .select()
+      .single();
+
+    return { data, error };
+  } catch (error) {
+    return { data: null, error: new Error('Unable to save class feedback. Please try again later.') };
+  }
+}
+
+export async function getAllClassFeedback() {
+  if (missingSupabaseConfig || !supabase) {
+    return { data: [], error: new Error('Supabase is not configured.') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('class_feedback')
+      .select('*')
+      .order('class_date', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    return { data: data || [], error };
+  } catch (error) {
+    return { data: [], error };
+  }
+}
+
 export async function deleteTrainingRegistration(registrationId) {
   if (String(registrationId || '').startsWith('local-')) {
     return {
