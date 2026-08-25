@@ -184,11 +184,7 @@ export async function getAllClassFeedback() {
   }
 
   try {
-    const { data, error } = await supabase
-      .from('class_feedback')
-      .select('*')
-      .order('class_date', { ascending: false })
-      .order('created_at', { ascending: false });
+    const { data, error } = await supabase.rpc('get_class_feedback');
 
     return { data: data || [], error };
   } catch (error) {

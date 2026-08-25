@@ -39,4 +39,25 @@ $$;
 
 REVOKE ALL ON FUNCTION public.submit_class_feedback(text, text, text, text, date, integer, text, text, text, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.submit_class_feedback(text, text, text, text, date, integer, text, text, text, text) TO anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.get_class_feedback()
+RETURNS SETOF public.class_feedback
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  IF auth.uid() IS DISTINCT FROM 'a9044df5-bf6b-42be-95d1-1f4337b2ff33'::uuid THEN
+    RAISE EXCEPTION 'Not authorized to view class feedback';
+  END IF;
+
+  RETURN QUERY
+  SELECT *
+  FROM public.class_feedback
+  ORDER BY class_date DESC, created_at DESC;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_class_feedback() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_class_feedback() TO authenticated;
 NOTIFY pgrst, 'reload schema';
