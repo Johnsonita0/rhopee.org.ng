@@ -378,6 +378,13 @@ function AdminDashboardPage({ onLogout }) {
     };
 
     loadFeedback();
+    const feedbackRefreshTimer = window.setInterval(loadFeedback, 15000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadFeedback();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const handleFeedbackUpdated = () => loadFeedback();
     if (typeof window !== 'undefined') {
@@ -389,6 +396,8 @@ function AdminDashboardPage({ onLogout }) {
       if (typeof window !== 'undefined') {
         window.removeEventListener('rhopee:feedback-updated', handleFeedbackUpdated);
       }
+      window.clearInterval(feedbackRefreshTimer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [activeTab]);
 
