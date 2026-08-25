@@ -8,7 +8,7 @@ import FeedbackPage from './pages/FeedbackPage.jsx';
 import VerificationStatusPage from './pages/VerificationStatusPage.jsx';
 import AdminLoginPage from './pages/AdminLoginPage.jsx';
 import AdminDashboardPage from './pages/AdminDashboardPage.jsx';
-import { ALLOWED_ADMIN_USER_ID, getAdminSession, signOutAdmin, verifyIdCode } from './lib/supabaseClient.js';
+import { getAdminSession, signOutAdmin, verifyIdCode } from './lib/supabaseClient.js';
 import './css/App.css';
 import { decodeVerificationPayload, encodeVerificationPayload, parseScannableQrValue } from './lib/verificationPayload.js';
 
@@ -335,10 +335,11 @@ function App() {
           throw error;
         }
 
-        if (data?.session?.user?.id === ALLOWED_ADMIN_USER_ID) {
-          setAdminAuthenticated(true);
-        } else if (!window.localStorage.getItem('adminAuth')) {
-          setAdminAuthenticated(false);
+        const hasSupabaseSession = Boolean(data?.session?.user);
+        setAdminAuthenticated(hasSupabaseSession);
+
+        if (!hasSupabaseSession) {
+          window.localStorage.removeItem('adminAuth');
         }
       } catch (error) {
         console.warn('Unable to restore admin session', error);
