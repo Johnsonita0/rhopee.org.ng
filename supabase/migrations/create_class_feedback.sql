@@ -26,7 +26,7 @@ DROP POLICY IF EXISTS "Allow public feedback insert" ON public.class_feedback;
 DROP POLICY IF EXISTS "Allow authenticated feedback select" ON public.class_feedback;
 
 CREATE POLICY "Allow public feedback insert" ON public.class_feedback
-FOR INSERT WITH CHECK (true);
+FOR INSERT TO anon, authenticated WITH CHECK (true);
 
 CREATE POLICY "Allow authenticated feedback select" ON public.class_feedback
 FOR SELECT USING (auth.role() = 'authenticated');
