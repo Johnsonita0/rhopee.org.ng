@@ -80,6 +80,21 @@ function Navbar({ activePage, onNavigate }) {
           <span />
           <span />
         </button>
+        <button
+          type="button"
+          className={`mobile-cbt-link ${activePage === 'cbt' ? 'active' : ''}`}
+          onClick={() => {
+            window.history.pushState({}, '', '/cbt');
+            onNavigate('cbt');
+            closeMenu();
+          }}
+          aria-label="Open CBT exam link generator"
+        >
+          <span className="nav-icon" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="1.6"/><path d="M8 7h8M8 11h2M14 11h2M8 15h2M14 15h2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+          </span>
+          <span>CBT exams</span>
+        </button>
       </div>
       <div className={`nav-links ${menuOpen ? 'open' : ''} ${collapsed ? 'collapsed' : ''}`}>
         <button
