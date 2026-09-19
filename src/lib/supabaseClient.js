@@ -200,11 +200,18 @@ export async function saveCbtExamResult(result) {
   try {
     const { data, error } = await supabase
       .from('cbt_exam_results')
-      .insert(result)
-      .select()
-      .single();
+      .insert(result);
 
-    return { data, error };
+    if (error) {
+      return {
+        data: null,
+        error: new Error(error.code === '42P01' || error.message?.includes('cbt_exam_results')
+          ? 'The cbt_exam_results table is missing. Run supabase/schema.sql in Supabase SQL Editor.'
+          : error.message || 'Unable to save the exam result.'),
+      };
+    }
+
+    return { data, error: null };
   } catch (error) {
     return { data: null, error };
   }

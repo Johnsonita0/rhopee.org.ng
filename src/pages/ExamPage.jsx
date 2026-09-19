@@ -79,6 +79,7 @@ function ExamPage({ studentName }) {
   const [timeLeft, setTimeLeft] = useState(45 * 60);
   const [warning, setWarning] = useState('');
   const [warningCount, setWarningCount] = useState(0);
+  const [resultSaveError, setResultSaveError] = useState('');
   const videoRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const lastVideoFrameRef = useRef(null);
@@ -113,6 +114,8 @@ function ExamPage({ studentName }) {
     dateStyle: 'full',
     timeStyle: 'short',
   }), []);
+  const answeredCount = Object.keys(answers).length;
+  const incorrectCount = answeredCount - score;
 
   useEffect(() => {
     answersRef.current = answers;
@@ -241,7 +244,10 @@ function ExamPage({ studentName }) {
     });
 
     if (resultError) {
-      setWarning('Your result is displayed, but it could not be sent to the admin dashboard.');
+      console.error('[CBT] Unable to save exam result:', resultError);
+      setResultSaveError(resultError.message?.includes('cbt_exam_results')
+        ? 'Admin sync is not ready yet. Run supabase/schema.sql in the Supabase SQL Editor, then submit a new attempt.'
+        : `Admin sync failed: ${resultError.message || 'the result could not be saved.'}`);
     }
   };
 
@@ -305,26 +311,39 @@ function ExamPage({ studentName }) {
         {!started && !submitted && <section className="start-panel"><h2>Ready to begin?</h2><p>This exam contains 40 questions and has a 45-minute time limit.</p><p className="proctoring-note">Starting requests fullscreen, camera, and microphone access for exam monitoring.</p><button className="primary-button" type="button" onClick={startExam}>Start exam</button></section>}
         <video ref={videoRef} className="proctor-camera" muted playsInline aria-hidden="true" />
         {warning && <div className="warning-toast" role="alert"><strong>Warning {warningCount}</strong><span>{warning}</span></div>}
-        {(started || submitted) && <>
+        {started && <>
           <section className="question-list">
-            {examQuestions.map(([question, options, correctAnswer], questionIndex) => (
+            {examQuestions.map(([question, options], questionIndex) => (
               <article className="question-card" key={question}>
                 <div className="question-heading"><span>{String(questionIndex + 1).padStart(2, '0')}</span><h2>{question}</h2></div>
                 <div className="answer-grid">
                   {options.map((option, optionIndex) => (
-                    <button className={`answer ${answers[questionIndex] === optionIndex ? 'selected' : ''} ${submitted && optionIndex === correctAnswer ? 'correct' : ''} ${submitted && answers[questionIndex] === optionIndex && optionIndex !== correctAnswer ? 'incorrect' : ''}`} key={option} type="button" disabled={!started || submitted} onClick={() => selectAnswer(questionIndex, optionIndex)}>
+                    <button className={`answer ${answers[questionIndex] === optionIndex ? 'selected' : ''}`} key={option} type="button" onClick={() => selectAnswer(questionIndex, optionIndex)}>
                       <span>{String.fromCharCode(65 + optionIndex)}</span>{option}
                     </button>
                   ))}
                 </div>
-                {submitted && <p className="correct-answer">Correct answer: <strong>{options[correctAnswer]}</strong></p>}
               </article>
             ))}
           </section>
           <section className="submit-bar">
-            {!submitted ? <button className="primary-button" type="button" disabled={!started} onClick={submitExam}>Submit exam</button> : <div className="result-banner"><strong>{displayName}, your score is {score}/40</strong><span>{score >= 24 ? 'Passed' : 'Keep practising and review the topics.'}</span></div>}
+            <button className="primary-button" type="button" onClick={submitExam}>Submit exam</button>
           </section>
         </>}
+        {submitted && <section className="results-page">
+          <div className={score >= 24 ? 'results-hero passed' : 'results-hero'}>
+            <div><p className="eyebrow">EXAM SUBMISSION COMPLETE</p><h2>{score >= 24 ? 'Congratulations, ' : 'Keep practising, '}{displayName}</h2><p>Submitted on {currentDateTime}</p></div>
+            <div className="results-score"><strong>{score}<small>/40</small></strong><span>{score >= 24 ? 'Passed' : 'Not passed'}</span></div>
+          </div>
+          <div className="results-metrics">
+            <div><span>Percentage</span><strong>{((score / examQuestions.length) * 100).toFixed(1)}%</strong></div>
+            <div><span>Answered</span><strong>{answeredCount}/40</strong></div>
+            <div><span>Correct</span><strong>{score}</strong></div>
+            <div><span>Needs review</span><strong>{incorrectCount}</strong></div>
+          </div>
+          {resultSaveError && <div className="result-sync-error" role="alert"><strong>Admin dashboard sync</strong><span>{resultSaveError}</span></div>}
+          <div className="results-review"><div className="results-section-heading"><div><p className="eyebrow">ANSWER ANALYSIS</p><h3>Review your submission</h3></div><span>{warningCount} proctoring warning{warningCount === 1 ? '' : 's'}</span></div><div className="review-list">{examQuestions.map(([question, options, correctAnswer], questionIndex) => { const selectedAnswer = answers[questionIndex]; const isCorrect = selectedAnswer === correctAnswer; return <article className={isCorrect ? 'review-row correct-row' : 'review-row'} key={question}><div className="review-number">{String(questionIndex + 1).padStart(2, '0')}</div><div className="review-copy"><strong>{question}</strong><span>Your answer: {selectedAnswer === undefined ? 'Not answered' : options[selectedAnswer]}</span><span className="review-correct">Correct answer: {options[correctAnswer]}</span></div><div className="review-result">{isCorrect ? 'Correct' : 'Review'}</div></article>; })}</div></div>
+        </section>}
       </main>
     );
   }
