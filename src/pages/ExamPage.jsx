@@ -93,6 +93,20 @@ function ExamPage({ studentName }) {
 
   const savedLinksKey = 'rhopee-cbt-links';
   const examQuestions = useMemo(() => studentQuestionSet(studentName || 'default-student'), [studentName]);
+  const displayName = formatStudentName(studentName || '');
+  const score = useMemo(() => examQuestions.reduce((total, question, index) => total + (answers[index] === question[2] ? 1 : 0), 0), [answers, examQuestions]);
+  const timeGreeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
+  const currentDateTime = useMemo(() => new Date().toLocaleString('en-NG', {
+    dateStyle: 'full',
+    timeStyle: 'short',
+  }), []);
+  const answeredCount = Object.keys(answers).length;
+  const incorrectCount = answeredCount - score;
 
   useEffect(() => {
     if (!studentName) {
@@ -123,21 +137,6 @@ function ExamPage({ studentName }) {
       isMounted = false;
     };
   }, [displayName, studentName]);
-
-  const score = useMemo(() => examQuestions.reduce((total, question, index) => total + (answers[index] === question[2] ? 1 : 0), 0), [answers, examQuestions]);
-  const displayName = formatStudentName(studentName || '');
-  const timeGreeting = useMemo(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  }, []);
-  const currentDateTime = useMemo(() => new Date().toLocaleString('en-NG', {
-    dateStyle: 'full',
-    timeStyle: 'short',
-  }), []);
-  const answeredCount = Object.keys(answers).length;
-  const incorrectCount = answeredCount - score;
 
   useEffect(() => {
     answersRef.current = answers;
