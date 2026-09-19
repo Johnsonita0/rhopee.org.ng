@@ -79,6 +79,7 @@ function ExamPage({ studentName }) {
   const [timeLeft, setTimeLeft] = useState(45 * 60);
   const [warning, setWarning] = useState('');
   const [warningCount, setWarningCount] = useState(0);
+  const [warningDetails, setWarningDetails] = useState(null);
   const [resultSaveError, setResultSaveError] = useState('');
   const videoRef = useRef(null);
   const mediaStreamRef = useRef(null);
@@ -140,7 +141,7 @@ function ExamPage({ studentName }) {
   useEffect(() => {
     if (!started || submitted) return undefined;
 
-    const showWarning = (message) => {
+    const showWarning = (message, eventType) => {
       const now = Date.now();
       if (now - lastWarningAtRef.current < 3000) return;
       lastWarningAtRef.current = now;
@@ -149,15 +150,16 @@ function ExamPage({ studentName }) {
         return count + 1;
       });
       setWarning(message);
+      setWarningDetails({ eventType, time: new Date(now).toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) });
       window.setTimeout(() => setWarning(''), 4500);
     };
 
     const handleVisibilityChange = () => {
-      if (document.hidden) showWarning('Exam malpractice warning: leaving the exam tab was detected.');
+      if (document.hidden) showWarning('The exam tab was left or hidden.', 'Tab or window change');
     };
-    const handleWindowBlur = () => showWarning('Exam malpractice warning: focus moved away from the exam.');
+    const handleWindowBlur = () => showWarning('Focus moved away from the exam window.', 'Window focus lost');
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) showWarning('Exam malpractice warning: fullscreen mode was exited.');
+      if (!document.fullscreenElement) showWarning('Fullscreen mode was exited during the exam.', 'Fullscreen exited');
     };
 
     const canvas = document.createElement('canvas');
@@ -172,7 +174,7 @@ function ExamPage({ studentName }) {
       if (lastVideoFrameRef.current) {
         let difference = 0;
         for (let index = 0; index < frame.length; index += 16) difference += Math.abs(frame[index] - lastVideoFrameRef.current[index]);
-        if (difference / (frame.length / 16) > 18) showWarning('Exam malpractice warning: movement was detected by the camera.');
+        if (difference / (frame.length / 16) > 18) showWarning('Movement was detected in the camera view.', 'Camera movement');
       }
       lastVideoFrameRef.current = frame;
     }, 700);
@@ -264,6 +266,7 @@ function ExamPage({ studentName }) {
       await document.documentElement.requestFullscreen();
     } catch {
       setWarning('Exam cannot start: fullscreen access is required.');
+      setWarningDetails({ eventType: 'Permission required', time: new Date().toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) });
       return;
     }
 
@@ -286,6 +289,7 @@ function ExamPage({ studentName }) {
       stopMediaStream();
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       setWarning('Exam cannot start: camera and microphone permission are both required. Allow access and try again.');
+      setWarningDetails({ eventType: 'Permission required', time: new Date().toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) });
       return;
     }
 
@@ -309,8 +313,8 @@ function ExamPage({ studentName }) {
           <div className={started && timeLeft <= 300 ? 'exam-stat timer-warning' : 'exam-stat'}><strong>{started || submitted ? formatTime(timeLeft) : '45:00'}</strong><span>{submitted ? 'time used' : 'time left'}</span></div>
         </section>
         {!started && !submitted && <section className="start-panel"><h2>Ready to begin?</h2><p>This exam contains 40 questions and has a 45-minute time limit.</p><p className="proctoring-note">Starting requests fullscreen, camera, and microphone access for exam monitoring.</p><button className="primary-button" type="button" onClick={startExam}>Start exam</button></section>}
-        <video ref={videoRef} className="proctor-camera" muted playsInline aria-hidden="true" />
-        {warning && <div className="warning-toast" role="alert"><strong>Warning {warningCount}</strong><span>{warning}</span></div>}
+        {started && <div className="proctor-preview" aria-label="Live camera monitoring"><div className="proctor-preview-header"><span className="recording-dot" /> <strong>LIVE MONITORING</strong><span>Camera</span></div><video ref={videoRef} className="proctor-camera" muted playsInline /></div>}
+        {warning && <div className="warning-toast" role="alert"><div className="warning-toast-title"><span aria-hidden>!</span><strong>Malpractice warning {warningCount}</strong></div><span>{warning}</span>{warningDetails && <small>{warningDetails.eventType} · {warningDetails.time}</small>}</div>}
         {started && <>
           <section className="question-list">
             {examQuestions.map(([question, options], questionIndex) => (

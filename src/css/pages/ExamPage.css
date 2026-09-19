@@ -13,10 +13,18 @@
 .start-panel h2, .start-panel p { margin: 0; }
 .start-panel p { color: var(--muted); }
 .start-panel .proctoring-note { max-width: 580px; color: #8a5a12; font-size: .9rem; }
-.proctor-camera { position: fixed; right: 12px; bottom: 12px; z-index: 4; width: 1px; height: 1px; opacity: .01; pointer-events: none; }
-.warning-toast { position: fixed; top: 18px; right: 18px; z-index: 100; display: grid; gap: 4px; max-width: min(420px, calc(100vw - 36px)); padding: 14px 16px; color: #fff; background: #a52525; border: 2px solid #ffb3b3; border-radius: 12px; box-shadow: 0 12px 30px rgba(95, 15, 15, .28); }
+.proctor-preview { position: fixed; right: 18px; bottom: 18px; z-index: 40; width: 188px; overflow: hidden; border: 2px solid #db3333; border-radius: 14px; background: #171717; box-shadow: 0 14px 32px rgba(0,0,0,.28); }
+.proctor-preview-header { display: flex; align-items: center; gap: 6px; padding: 7px 9px; color: #fff; background: #7c2020; font-size: .68rem; letter-spacing: .05em; }
+.proctor-preview-header span:last-child { margin-left: auto; opacity: .78; font-size: .62rem; }
+.recording-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff4747; box-shadow: 0 0 0 3px rgba(255,71,71,.2); animation: recording-pulse 1.4s ease-in-out infinite; }
+.proctor-camera { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transform: scaleX(-1); background: #252525; }
+.warning-toast { position: fixed; top: 18px; right: 18px; z-index: 100; display: grid; gap: 6px; max-width: min(420px, calc(100vw - 36px)); padding: 15px 17px; color: #fff; background: #a52525; border: 2px solid #ffb3b3; border-radius: 12px; box-shadow: 0 12px 30px rgba(95, 15, 15, .28); }
+.warning-toast-title { display: flex; align-items: center; gap: 8px; }
+.warning-toast-title > span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; color: #a52525; background: #fff; font-weight: 900; }
 .warning-toast strong { font-size: .95rem; }
-.warning-toast span { font-size: .88rem; line-height: 1.4; }
+.warning-toast > span { font-size: .9rem; line-height: 1.4; }
+.warning-toast small { color: #ffd6d6; font-size: .76rem; font-weight: 700; }
+@keyframes recording-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .42; } }
 .generator-panel, .links-panel, .question-card, .submit-bar { padding: 24px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); box-shadow: 0 12px 30px rgba(15,95,43,.06); }
 .generator-panel, .links-panel { display: grid; gap: 18px; }
 .generator-panel h2, .links-panel h2 { margin: 0 0 6px; }
@@ -80,3 +88,4 @@ textarea { width: 100%; resize: vertical; padding: 14px; border: 1px solid var(-
 .correct-row .review-result { color: #176631; background: #dff3e4; }
 @media (max-width: 640px) { .cbt-hero { align-items: flex-start; flex-direction: column; padding: 24px; } .exam-stat { align-self: stretch; } .answer-grid, .student-link { grid-template-columns: 1fr; } .student-link a { white-space: normal; overflow-wrap: anywhere; } .result-banner { align-items: flex-start; flex-direction: column; gap: 8px; } }
 @media (max-width: 640px) { .results-hero { align-items: stretch; flex-direction: column; padding: 24px; } .results-score { width: 100%; } .results-metrics { grid-template-columns: 1fr 1fr; } .results-review { padding: 16px; } .results-section-heading { flex-direction: column; } .review-row { grid-template-columns: 30px 1fr; } .review-result { grid-column: 2; width: fit-content; } }
+@media (max-width: 640px) { .proctor-preview { right: 10px; bottom: 10px; width: 132px; } .proctor-preview-header { padding: 6px 7px; font-size: .58rem; } .warning-toast { top: 10px; right: 10px; } }
