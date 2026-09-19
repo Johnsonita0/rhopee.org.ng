@@ -84,6 +84,21 @@ function Navbar({ activePage, onNavigate }) {
       <div className={`nav-links ${menuOpen ? 'open' : ''} ${collapsed ? 'collapsed' : ''}`}>
         <button
           type="button"
+          className={activePage === 'cbt' ? 'active' : ''}
+          onClick={() => {
+            window.history.pushState({}, '', '/cbt');
+            onNavigate('cbt');
+            closeMenu();
+          }}
+          title="CBT exams"
+        >
+          <span className="nav-icon" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="1.6"/><path d="M8 7h8M8 11h2M14 11h2M8 15h2M14 15h2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+          </span>
+          <span className="link-text">CBT exams</span>
+        </button>
+        <button
+          type="button"
           className={activePage === 'home' ? 'active' : ''}
           onClick={() => goToPage('home')}
           title="Home"

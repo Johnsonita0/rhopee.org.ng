@@ -8,6 +8,7 @@ import FeedbackPage from './pages/FeedbackPage.jsx';
 import VerificationStatusPage from './pages/VerificationStatusPage.jsx';
 import AdminLoginPage from './pages/AdminLoginPage.jsx';
 import AdminDashboardPage from './pages/AdminDashboardPage.jsx';
+import ExamPage from './pages/ExamPage.jsx';
 import { getAdminSession, signOutAdmin, verifyIdCode } from './lib/supabaseClient.js';
 import './css/App.css';
 import { decodeVerificationPayload, encodeVerificationPayload, parseScannableQrValue } from './lib/verificationPayload.js';
@@ -18,6 +19,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState('home');
+  const [examStudent, setExamStudent] = useState('');
   const [scannedMemberData, setScannedMemberData] = useState(null);
   const [adminAuthenticated, setAdminAuthenticated] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -289,6 +291,13 @@ function App() {
         return;
       }
 
+      if (currentPath === '/cbt' || currentPath.startsWith('/cbt/')) {
+        setRouteMode('app');
+        setExamStudent(currentPath.startsWith('/cbt/') ? decodeURIComponent(currentPath.slice(5)) : '');
+        setPage('cbt');
+        return;
+      }
+
       setRouteMode('app');
 
       if (currentPath === '/register') {
@@ -383,6 +392,10 @@ function App() {
     );
   }
 
+  if (page === 'cbt' && examStudent) {
+    return <ExamPage studentName={examStudent} />;
+  }
+
   return (
     <div className="app-shell">
       <Navbar activePage={page} onNavigate={setPage} />
@@ -406,6 +419,7 @@ function App() {
         {page === 'register' && <RegistrationPage />}
         {page === 'event-register' && <EventRegistrationPage />}
         {page === 'feedback' && <FeedbackPage />}
+        {page === 'cbt' && <ExamPage studentName={examStudent} />}
       </div>
       <footer className="app-footer">
         <p>© {new Date().getFullYear()} RHOPEE. One Nigeria, One People, One Future</p>
