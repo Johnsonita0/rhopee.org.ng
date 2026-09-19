@@ -215,6 +215,12 @@ function ExamPage({ studentName }) {
     mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
   }, []);
 
+  useEffect(() => {
+    if (!started || !videoRef.current || !mediaStreamRef.current) return;
+    videoRef.current.srcObject = mediaStreamRef.current;
+    videoRef.current.play().catch(() => {});
+  }, [started]);
+
   const generateLinks = (event) => {
     event.preventDefault();
     const names = [...new Set(namesInput.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean))];
@@ -298,15 +304,6 @@ function ExamPage({ studentName }) {
     }
 
     try {
-      if (!document.documentElement.requestFullscreen) throw new Error('Fullscreen is not supported by this browser.');
-      await document.documentElement.requestFullscreen();
-    } catch {
-      setWarning('Exam cannot start: fullscreen access is required.');
-      setWarningDetails({ eventType: 'Permission required', time: new Date().toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) });
-      return;
-    }
-
-    try {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error('Camera and microphone are not available.');
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       const hasCamera = stream.getVideoTracks().some((track) => track.readyState === 'live');
@@ -317,16 +314,20 @@ function ExamPage({ studentName }) {
       }
 
       mediaStreamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
     } catch {
       stopMediaStream();
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       setWarning('Exam cannot start: camera and microphone permission are both required. Allow access and try again.');
       setWarningDetails({ eventType: 'Permission required', time: new Date().toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) });
       return;
+    }
+
+    try {
+      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch {
+      setWarning('Fullscreen is unavailable on this browser. The exam will continue with camera and microphone monitoring.');
+      setWarningDetails({ eventType: 'Fullscreen unavailable', time: new Date().toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) });
     }
 
     startedAtRef.current = new Date().toISOString();
