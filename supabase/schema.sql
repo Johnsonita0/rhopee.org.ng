@@ -1,7 +1,7 @@
 -- RHOPEE backend schema
 -- Run this file in the Supabase SQL Editor for a complete, repeatable setup.
--- It creates the tables used by ID verification, training registration,
--- class feedback, and the admin dashboard.
+-- It creates every table, policy, grant, index, and RPC used by the project:
+-- ID verification, training registration, class feedback, and CBT results.
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
@@ -42,6 +42,9 @@ BEGIN
     EXECUTE 'UPDATE public.id_cards SET tag = position WHERE tag IS NULL AND position IS NOT NULL';
   END IF;
 END $$;
+
+-- The old create_id_cards.sql file used position. Preserve that upgrade path
+-- without requiring the legacy column on new installations.
 
 CREATE INDEX IF NOT EXISTS idx_id_cards_barcode ON public.id_cards (barcode);
 CREATE INDEX IF NOT EXISTS idx_id_cards_membership_id ON public.id_cards (membership_id);
@@ -227,10 +230,46 @@ REVOKE ALL ON FUNCTION public.delete_class_feedback(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.delete_class_feedback(uuid) TO authenticated;
 
 -- =====================================================
+-- CBT exam results used by the admin dashboard
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.cbt_exam_results (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_name text NOT NULL,
+  score integer NOT NULL CHECK (score >= 0),
+  total_questions integer NOT NULL CHECK (total_questions > 0),
+  percentage numeric(5, 2) NOT NULL CHECK (percentage >= 0 AND percentage <= 100),
+  passed boolean NOT NULL DEFAULT false,
+  completion_reason text NOT NULL DEFAULT 'submitted',
+  warning_count integer NOT NULL DEFAULT 0 CHECK (warning_count >= 0),
+  started_at timestamptz,
+  completed_at timestamptz NOT NULL DEFAULT now(),
+  performance jsonb NOT NULL DEFAULT '[]'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_cbt_exam_results_student_name ON public.cbt_exam_results (lower(student_name));
+CREATE INDEX IF NOT EXISTS idx_cbt_exam_results_completed_at ON public.cbt_exam_results (completed_at DESC);
+
+ALTER TABLE public.cbt_exam_results ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public exam result insert" ON public.cbt_exam_results;
+DROP POLICY IF EXISTS "Allow authenticated exam result select" ON public.cbt_exam_results;
+
+CREATE POLICY "Allow public exam result insert" ON public.cbt_exam_results
+FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+CREATE POLICY "Allow authenticated exam result select" ON public.cbt_exam_results
+FOR SELECT TO authenticated USING (true);
+
+GRANT INSERT ON public.cbt_exam_results TO anon, authenticated;
+GRANT SELECT ON public.cbt_exam_results TO authenticated;
+
+NOTIFY pgrst, 'reload schema';
+
+-- =====================================================
 -- Verification
 -- =====================================================
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'
-  AND table_name IN ('id_cards', 'training_registrations', 'class_feedback')
+  AND table_name IN ('id_cards', 'training_registrations', 'class_feedback', 'cbt_exam_results')
 ORDER BY table_name;

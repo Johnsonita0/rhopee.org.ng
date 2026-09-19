@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import '../css/pages/ExamPage.css';
+import { saveCbtExamResult } from '../lib/supabaseClient.js';
 
 const QUESTION_BANK = [
   ['What does HTML stand for?', ['HyperText Markup Language', 'HighText Machine Language', 'Hyperlink Text Management Language', 'Home Tool Markup Language'], 0],
@@ -82,6 +83,10 @@ function ExamPage({ studentName }) {
   const mediaStreamRef = useRef(null);
   const lastVideoFrameRef = useRef(null);
   const lastWarningAtRef = useRef(0);
+  const startedAtRef = useRef(null);
+  const answersRef = useRef(answers);
+  const resultSavedRef = useRef(false);
+  const warningCountRef = useRef(0);
 
   const savedLinksKey = 'rhopee-cbt-links';
   const examQuestions = useMemo(() => studentQuestionSet(studentName || 'default-student'), [studentName]);
@@ -98,6 +103,20 @@ function ExamPage({ studentName }) {
 
   const score = useMemo(() => examQuestions.reduce((total, question, index) => total + (answers[index] === question[2] ? 1 : 0), 0), [answers, examQuestions]);
   const displayName = formatStudentName(studentName || '');
+  const timeGreeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
+  const currentDateTime = useMemo(() => new Date().toLocaleString('en-NG', {
+    dateStyle: 'full',
+    timeStyle: 'short',
+  }), []);
+
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
 
   useEffect(() => {
     if (!started || submitted) return undefined;
@@ -105,8 +124,7 @@ function ExamPage({ studentName }) {
     const timer = window.setInterval(() => {
       setTimeLeft((currentTime) => {
         if (currentTime <= 1) {
-          setSubmitted(true);
-          setStarted(false);
+          finishExam('time_expired');
           return 0;
         }
         return currentTime - 1;
@@ -123,7 +141,10 @@ function ExamPage({ studentName }) {
       const now = Date.now();
       if (now - lastWarningAtRef.current < 3000) return;
       lastWarningAtRef.current = now;
-      setWarningCount((count) => count + 1);
+      setWarningCount((count) => {
+        warningCountRef.current = count + 1;
+        return count + 1;
+      });
       setWarning(message);
       window.setTimeout(() => setWarning(''), 4500);
     };
@@ -178,16 +199,53 @@ function ExamPage({ studentName }) {
   };
 
   const selectAnswer = (questionIndex, answerIndex) => {
-    if (started && !submitted) setAnswers((current) => ({ ...current, [questionIndex]: answerIndex }));
+    if (started && !submitted) {
+      setAnswers((current) => {
+        const nextAnswers = { ...current, [questionIndex]: answerIndex };
+        answersRef.current = nextAnswers;
+        return nextAnswers;
+      });
+    }
   };
 
-  const submitExam = () => {
+  const finishExam = async (completionReason = 'submitted') => {
+    if (submitted || resultSavedRef.current) return;
+
     setSubmitted(true);
     setStarted(false);
+    resultSavedRef.current = true;
     mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
     mediaStreamRef.current = null;
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+
+    const submittedAnswers = answersRef.current;
+    const resultScore = examQuestions.reduce((total, question, index) => total + (submittedAnswers[index] === question[2] ? 1 : 0), 0);
+    const performance = examQuestions.map(([question, options, correctAnswer], index) => ({
+      question,
+      selected_answer: submittedAnswers[index] === undefined ? null : options[submittedAnswers[index]],
+      correct_answer: options[correctAnswer],
+      is_correct: submittedAnswers[index] === correctAnswer,
+    }));
+
+    const { error: resultError } = await saveCbtExamResult({
+      student_name: displayName,
+      score: resultScore,
+      total_questions: examQuestions.length,
+      percentage: Number(((resultScore / examQuestions.length) * 100).toFixed(2)),
+      passed: resultScore >= 24,
+      completion_reason: completionReason,
+      warning_count: warningCountRef.current,
+      started_at: startedAtRef.current,
+      completed_at: new Date().toISOString(),
+      performance,
+    });
+
+    if (resultError) {
+      setWarning('Your result is displayed, but it could not be sent to the admin dashboard.');
+    }
   };
+
+  const submitExam = () => finishExam('submitted');
 
   const stopMediaStream = () => {
     mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
@@ -225,6 +283,10 @@ function ExamPage({ studentName }) {
       return;
     }
 
+    startedAtRef.current = new Date().toISOString();
+    resultSavedRef.current = false;
+    warningCountRef.current = 0;
+    setWarningCount(0);
     setStarted(true);
   };
 
@@ -234,7 +296,8 @@ function ExamPage({ studentName }) {
         <section className="cbt-hero">
           <div>
             <p className="eyebrow">RHOPEE WEB DEVELOPMENT CBT</p>
-            <h1>Welcome, {displayName}</h1>
+            <h1>{timeGreeting}, {displayName}</h1>
+            <p className="exam-timestamp">{currentDateTime}</p>
             <p>{submitted ? 'Your results are ready below.' : started ? 'Answer all 40 questions before the timer reaches zero.' : 'Click Start exam when you are ready. The 45-minute timer starts immediately.'}</p>
           </div>
           <div className={started && timeLeft <= 300 ? 'exam-stat timer-warning' : 'exam-stat'}><strong>{started || submitted ? formatTime(timeLeft) : '45:00'}</strong><span>{submitted ? 'time used' : 'time left'}</span></div>

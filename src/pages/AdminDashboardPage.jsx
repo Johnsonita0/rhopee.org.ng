@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import '../css/pages/AdminDashboardPage.css';
 import ConfirmationSlip from '../components/ConfirmationSlip.jsx';
-import { getAllTrainingRegistrations, getAllClassFeedback, deleteClassFeedback, deleteTrainingRegistration } from '../lib/supabaseClient.js';
+import { getAllTrainingRegistrations, getAllClassFeedback, getAllCbtExamResults, deleteClassFeedback, deleteTrainingRegistration } from '../lib/supabaseClient.js';
 import { filterRegistrations } from '../lib/dashboardFilters.js';
 
 const trackLabels = {
@@ -28,6 +28,16 @@ function formatDate(value) {
 
 }
 
+function formatDateTime(value) {
+  if (!value) return '—';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString('en-NG', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+}
+
 function AdminDashboardPage({ onLogout }) {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +59,10 @@ function AdminDashboardPage({ onLogout }) {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState('');
   const [deletingFeedbackId, setDeletingFeedbackId] = useState(null);
+  const [examResults, setExamResults] = useState([]);
+  const [examResultsLoading, setExamResultsLoading] = useState(false);
+  const [examResultsError, setExamResultsError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   const escapeHtml = (value = '') =>
     String(value)
@@ -379,26 +393,31 @@ function AdminDashboardPage({ onLogout }) {
     };
 
     loadFeedback();
-    const feedbackRefreshTimer = window.setInterval(loadFeedback, 15000);
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        loadFeedback();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    const handleFeedbackUpdated = () => loadFeedback();
-    if (typeof window !== 'undefined') {
-      window.addEventListener('rhopee:feedback-updated', handleFeedbackUpdated);
-    }
-
     return () => {
       isMounted = false;
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('rhopee:feedback-updated', handleFeedbackUpdated);
+    };
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'exams') return undefined;
+
+    let isMounted = true;
+    const loadExamResults = async () => {
+      setExamResultsLoading(true);
+      setExamResultsError('');
+      const { data, error: fetchError } = await getAllCbtExamResults();
+      if (!isMounted) return;
+      if (fetchError) {
+        setExamResultsError(fetchError.message || 'Unable to load exam results.');
+      } else {
+        setExamResults(data || []);
       }
-      window.clearInterval(feedbackRefreshTimer);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      setExamResultsLoading(false);
+    };
+
+    loadExamResults();
+    return () => {
+      isMounted = false;
     };
   }, [activeTab]);
 
@@ -419,6 +438,42 @@ function AdminDashboardPage({ onLogout }) {
 
     setFeedback((current) => current.filter((feedbackEntry) => feedbackEntry.id !== entry.id));
     setDeletingFeedbackId(null);
+  };
+
+  const refreshActiveTab = async () => {
+    setRefreshing(true);
+    try {
+      if (activeTab === 'feedback') {
+        setFeedbackLoading(true);
+        const { data, error: fetchError } = await getAllClassFeedback();
+        if (fetchError) setFeedbackError(fetchError.message || 'Unable to load class feedback.');
+        else {
+          setFeedback(data || []);
+          setFeedbackError('');
+        }
+        setFeedbackLoading(false);
+      } else if (activeTab === 'exams') {
+        setExamResultsLoading(true);
+        const { data, error: fetchError } = await getAllCbtExamResults();
+        if (fetchError) setExamResultsError(fetchError.message || 'Unable to load exam results.');
+        else {
+          setExamResults(data || []);
+          setExamResultsError('');
+        }
+        setExamResultsLoading(false);
+      } else {
+        setLoading(true);
+        const { data, error: fetchError } = await getAllTrainingRegistrations();
+        if (fetchError) setError(fetchError.message || 'Unable to load registrations.');
+        else {
+          setRegistrations(data || []);
+          setError('');
+        }
+        setLoading(false);
+      }
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
@@ -466,19 +521,8 @@ function AdminDashboardPage({ onLogout }) {
 
     loadRegistrations();
 
-    const handleRegistrationsUpdated = () => {
-      loadRegistrations();
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
-    }
-
     return () => {
       isMounted = false;
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('rhopee:registrations-updated', handleRegistrationsUpdated);
-      }
       if (toastTimer) {
         window.clearTimeout(toastTimer);
       }
@@ -501,6 +545,29 @@ function AdminDashboardPage({ onLogout }) {
   const filteredRegistrations = useMemo(() => {
     return filterRegistrations(registrations, filterState, trackLabels);
   }, [filterState, registrations]);
+
+  const groupedExamResults = useMemo(() => {
+    const groups = new Map();
+    examResults.forEach((result) => {
+      const name = result.student_name || 'Unnamed student';
+      const key = name.trim().toLowerCase();
+      const current = groups.get(key) || { name, attempts: [] };
+      current.attempts.push(result);
+      groups.set(key, current);
+    });
+
+    return [...groups.values()].map((group) => {
+      const attempts = [...group.attempts].sort((left, right) => new Date(right.completed_at) - new Date(left.completed_at));
+      const scores = attempts.map((attempt) => Number(attempt.percentage || 0));
+      return {
+        ...group,
+        attempts,
+        latest: attempts[0],
+        bestPercentage: Math.max(...scores, 0),
+        averagePercentage: scores.length ? scores.reduce((total, value) => total + value, 0) / scores.length : 0,
+      };
+    }).sort((left, right) => left.name.localeCompare(right.name));
+  }, [examResults]);
 
   useEffect(() => {
     setSelectedForPrint((currentSelection) =>
@@ -562,9 +629,59 @@ function AdminDashboardPage({ onLogout }) {
           <button type="button" role="tab" aria-selected={activeTab === 'feedback'} className={activeTab === 'feedback' ? 'active' : ''} onClick={() => setActiveTab('feedback')}>
             Class feedback
           </button>
+          <button type="button" role="tab" aria-selected={activeTab === 'exams'} className={activeTab === 'exams' ? 'active' : ''} onClick={() => setActiveTab('exams')}>
+            CBT results
+          </button>
         </div>
 
-        {activeTab === 'feedback' ? (
+        {activeTab === 'exams' ? (
+          <div className="feedback-dashboard-card exam-results-dashboard">
+            <div className="table-toolbar">
+              <div className="table-toolbar-copy">
+                <p className="admin-eyebrow dashboard-eyebrow">Student performance</p>
+                <h2>Web development CBT results</h2>
+                <p>Scores are grouped by student name. Use Refresh results when you want to load new submissions.</p>
+              </div>
+              <div className="table-actions"><div className="feedback-count">{examResults.length} attempts</div><button type="button" className="admin-action-btn secondary" onClick={refreshActiveTab} disabled={refreshing}>{refreshing ? 'Refreshing...' : 'Refresh results'}</button></div>
+            </div>
+            {examResultsLoading ? (
+              <div className="admin-state-card">Loading exam results...</div>
+            ) : examResultsError ? (
+              <div className="admin-state-card form-error">{examResultsError}</div>
+            ) : groupedExamResults.length === 0 ? (
+              <div className="admin-state-card">No CBT exam results have been submitted yet.</div>
+            ) : (
+              <div className="exam-results-list">
+                {groupedExamResults.map((group) => (
+                  <article className="exam-student-card" key={group.name.toLowerCase()}>
+                    <div className="exam-student-header">
+                      <div><h3>{group.name}</h3><p>Latest attempt: {formatDateTime(group.latest?.completed_at)}</p></div>
+                      <span className={group.latest?.passed ? 'exam-status passed' : 'exam-status'}>{group.latest?.passed ? 'Passed' : 'Below pass mark'}</span>
+                    </div>
+                    <div className="exam-student-metrics">
+                      <div><span>Latest score</span><strong>{group.latest?.score || 0}/{group.latest?.total_questions || 40}</strong></div>
+                      <div><span>Latest percentage</span><strong>{Number(group.latest?.percentage || 0).toFixed(1)}%</strong></div>
+                      <div><span>Best performance</span><strong>{group.bestPercentage.toFixed(1)}%</strong></div>
+                      <div><span>Average</span><strong>{group.averagePercentage.toFixed(1)}%</strong></div>
+                    </div>
+                    <div className="exam-attempt-list">
+                      {group.attempts.map((attempt, index) => (
+                        <div className="exam-attempt" key={attempt.id || `${group.name}-${index}`}>
+                          <span>Attempt {group.attempts.length - index}</span>
+                          <strong>{attempt.score}/{attempt.total_questions}</strong>
+                          <span>{Number(attempt.percentage || 0).toFixed(1)}%</span>
+                          <span>{attempt.completion_reason === 'time_expired' ? 'Time expired' : 'Submitted'}</span>
+                          <span>{attempt.warning_count || 0} warnings</span>
+                          <time dateTime={attempt.completed_at}>{formatDateTime(attempt.completed_at)}</time>
+                        </div>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : activeTab === 'feedback' ? (
           <div className="feedback-dashboard-card">
             <div className="table-toolbar">
               <div className="table-toolbar-copy">
@@ -572,7 +689,7 @@ function AdminDashboardPage({ onLogout }) {
                 <h2>Daily class feedback</h2>
                 <p>Read how each track is landing and spot challenges that need attention.</p>
               </div>
-              <div className="feedback-count">{feedback.length} responses</div>
+              <div className="table-actions"><div className="feedback-count">{feedback.length} responses</div><button type="button" className="admin-action-btn secondary" onClick={refreshActiveTab} disabled={refreshing}>{refreshing ? 'Refreshing...' : 'Refresh feedback'}</button></div>
             </div>
             {feedbackLoading ? (
               <div className="admin-state-card">Loading class feedback...</div>
@@ -673,6 +790,9 @@ function AdminDashboardPage({ onLogout }) {
                   <p>Manage participant records and prepare registration documents from one place.</p>
                 </div>
                 <div className="table-actions">
+                  <button type="button" className="admin-action-btn secondary" onClick={refreshActiveTab} disabled={refreshing}>
+                    {refreshing ? 'Refreshing...' : 'Refresh registrations'}
+                  </button>
                   <button type="button" className="admin-action-btn" onClick={printAllRegistrations}>
                     Print all sheet
                   </button>

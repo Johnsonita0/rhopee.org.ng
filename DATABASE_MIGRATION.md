@@ -1,4 +1,10 @@
-# How to Update Your Supabase Database Schema
+# Supabase Database Setup
+
+The complete project schema is consolidated in `supabase/schema.sql`. Run that single file in the Supabase SQL Editor for a repeatable setup or upgrade of all project tables, policies, grants, indexes, and RPC functions.
+
+The files under `supabase/migrations/` are retained as historical incremental migrations. They are not required when `supabase/schema.sql` has been run.
+
+## Legacy migration notes
 
 Your database currently has a `position` column, but the app now uses a `tag` column. Follow these steps:
 
@@ -45,3 +51,7 @@ ALTER TABLE public.id_cards DROP COLUMN position;
 ## Done! ✅
 
 Your database is now updated. The app should work perfectly and show the "Member Tag/Position" field correctly.
+
+## CBT exam results
+
+Run `supabase/migrations/create_cbt_exam_results.sql` in the Supabase SQL Editor before using the CBT exam links. It creates the results table and policies that allow students to submit scores while restricting result reads to authenticated admins.

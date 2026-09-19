@@ -192,6 +192,41 @@ export async function getAllClassFeedback() {
   }
 }
 
+export async function saveCbtExamResult(result) {
+  if (missingSupabaseConfig || !supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('cbt_exam_results')
+      .insert(result)
+      .select()
+      .single();
+
+    return { data, error };
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
+export async function getAllCbtExamResults() {
+  if (missingSupabaseConfig || !supabase) {
+    return { data: [], error: new Error('Supabase is not configured.') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('cbt_exam_results')
+      .select('*')
+      .order('completed_at', { ascending: false });
+
+    return { data: data || [], error };
+  } catch (error) {
+    return { data: [], error };
+  }
+}
+
 export async function deleteClassFeedback(feedbackId) {
   if (missingSupabaseConfig || !supabase) {
     return { error: new Error('Supabase is not configured.') };
