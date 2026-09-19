@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import '../css/pages/ExamPage.css';
-import { saveCbtExamResult } from '../lib/supabaseClient.js';
+import { hasCompletedCbtExam, saveCbtExamResult } from '../lib/supabaseClient.js';
 
 const QUESTION_BANK = [
   ['What does HTML stand for?', ['HyperText Markup Language', 'HighText Machine Language', 'Hyperlink Text Management Language', 'Home Tool Markup Language'], 0],
@@ -80,6 +80,7 @@ function ExamPage({ studentName }) {
   const [warning, setWarning] = useState('');
   const [warningCount, setWarningCount] = useState(0);
   const [warningDetails, setWarningDetails] = useState(null);
+  const [examAccess, setExamAccess] = useState({ status: 'checking', message: '' });
   const [resultSaveError, setResultSaveError] = useState('');
   const videoRef = useRef(null);
   const mediaStreamRef = useRef(null);
@@ -102,6 +103,26 @@ function ExamPage({ studentName }) {
       }
     }
   }, [studentName]);
+
+  useEffect(() => {
+    if (!studentName) return undefined;
+
+    let isMounted = true;
+    hasCompletedCbtExam(displayName).then(({ data, error }) => {
+      if (!isMounted) return;
+      if (error) {
+        setExamAccess({ status: 'error', message: error.message || 'Unable to verify exam access.' });
+      } else if (data) {
+        setExamAccess({ status: 'completed', message: 'This exam link has already been submitted and cannot be used again.' });
+      } else {
+        setExamAccess({ status: 'available', message: '' });
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [displayName, studentName]);
 
   const score = useMemo(() => examQuestions.reduce((total, question, index) => total + (answers[index] === question[2] ? 1 : 0), 0), [answers, examQuestions]);
   const displayName = formatStudentName(studentName || '');
@@ -250,6 +271,8 @@ function ExamPage({ studentName }) {
       setResultSaveError(resultError.message?.includes('cbt_exam_results')
         ? 'Admin sync is not ready yet. Run supabase/schema.sql in the Supabase SQL Editor, then submit a new attempt.'
         : `Admin sync failed: ${resultError.message || 'the result could not be saved.'}`);
+    } else if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('rhopee-cbt-completed-route', `/cbt/${encodeURIComponent(displayName)}`);
     }
   };
 
@@ -261,6 +284,20 @@ function ExamPage({ studentName }) {
   };
 
   const startExam = async () => {
+    if (examAccess.status !== 'available') return;
+
+    if (navigator.permissions?.query) {
+      const [cameraPermission, microphonePermission] = await Promise.all([
+        navigator.permissions.query({ name: 'camera' }).catch(() => null),
+        navigator.permissions.query({ name: 'microphone' }).catch(() => null),
+      ]);
+      if (cameraPermission?.state === 'denied' || microphonePermission?.state === 'denied') {
+        setWarning('Exam cannot start: camera and microphone access is blocked in this browser.');
+        setWarningDetails({ eventType: 'Permission blocked', time: new Date().toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) });
+        return;
+      }
+    }
+
     try {
       if (!document.documentElement.requestFullscreen) throw new Error('Fullscreen is not supported by this browser.');
       await document.documentElement.requestFullscreen();
@@ -312,7 +349,12 @@ function ExamPage({ studentName }) {
           </div>
           <div className={started && timeLeft <= 300 ? 'exam-stat timer-warning' : 'exam-stat'}><strong>{started || submitted ? formatTime(timeLeft) : '45:00'}</strong><span>{submitted ? 'time used' : 'time left'}</span></div>
         </section>
-        {!started && !submitted && <section className="start-panel"><h2>Ready to begin?</h2><p>This exam contains 40 questions and has a 45-minute time limit.</p><p className="proctoring-note">Starting requests fullscreen, camera, and microphone access for exam monitoring.</p><button className="primary-button" type="button" onClick={startExam}>Start exam</button></section>}
+        {!started && !submitted && <section className="start-panel">
+          {examAccess.status === 'checking' && <><h2>Checking exam access...</h2><p>Please wait while we verify this student link.</p></>}
+          {examAccess.status === 'completed' && <><h2>Exam already submitted</h2><p>{examAccess.message}</p></>}
+          {examAccess.status === 'error' && <><h2>Exam access unavailable</h2><p>{examAccess.message}</p><p className="proctoring-note">Ask the administrator to apply the latest supabase/schema.sql file.</p></>}
+          {examAccess.status === 'available' && <><h2>Ready to begin?</h2><p>This exam contains 40 questions and has a 45-minute time limit.</p><p className="proctoring-note">Starting requests fullscreen, camera, and microphone access for exam monitoring.</p><button className="primary-button" type="button" onClick={startExam}>Start exam</button></>}
+        </section>}
         {started && <div className="proctor-preview" aria-label="Live camera monitoring"><div className="proctor-preview-header"><span className="recording-dot" /> <strong>LIVE MONITORING</strong><span>Camera</span></div><video ref={videoRef} className="proctor-camera" muted playsInline /></div>}
         {warning && <div className="warning-toast" role="alert"><div className="warning-toast-title"><span aria-hidden>!</span><strong>Malpractice warning {warningCount}</strong></div><span>{warning}</span>{warningDetails && <small>{warningDetails.eventType} · {warningDetails.time}</small>}</div>}
         {started && <>

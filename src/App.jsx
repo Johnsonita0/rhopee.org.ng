@@ -300,6 +300,13 @@ function App() {
 
       setRouteMode('app');
 
+      const completedStudentRoute = window.sessionStorage.getItem('rhopee-cbt-completed-route');
+      if (completedStudentRoute && (currentPath === '/' || currentPath === '/cbt')) {
+        setExamStudent(decodeURIComponent(completedStudentRoute.slice(5)));
+        setPage('cbt');
+        return;
+      }
+
       if (currentPath === '/register') {
         setPage('register');
       } else if (currentPath === '/feedback') {

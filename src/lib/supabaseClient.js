@@ -205,8 +205,10 @@ export async function saveCbtExamResult(result) {
     if (error) {
       return {
         data: null,
-        error: new Error(error.code === '42P01' || error.message?.includes('cbt_exam_results')
-          ? 'The cbt_exam_results table is missing. Run supabase/schema.sql in Supabase SQL Editor.'
+        error: new Error(error.code === '23505'
+          ? 'This student name has already completed the exam and cannot submit another attempt.'
+          : error.code === '42P01' || error.message?.includes('cbt_exam_results')
+            ? 'The cbt_exam_results table is missing. Run supabase/schema.sql in Supabase SQL Editor.'
           : error.message || 'Unable to save the exam result.'),
       };
     }
@@ -214,6 +216,21 @@ export async function saveCbtExamResult(result) {
     return { data, error: null };
   } catch (error) {
     return { data: null, error };
+  }
+}
+
+export async function hasCompletedCbtExam(studentName) {
+  if (missingSupabaseConfig || !supabase) {
+    return { data: false, error: new Error('Supabase is not configured.') };
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('has_completed_cbt_exam', {
+      p_student_name: studentName,
+    });
+    return { data: Boolean(data), error };
+  } catch (error) {
+    return { data: false, error };
   }
 }
 

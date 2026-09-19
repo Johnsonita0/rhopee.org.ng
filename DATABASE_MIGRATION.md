@@ -54,4 +54,4 @@ Your database is now updated. The app should work perfectly and show the "Member
 
 ## CBT exam results
 
-Run `supabase/migrations/create_cbt_exam_results.sql` in the Supabase SQL Editor before using the CBT exam links. It creates the results table and policies that allow students to submit scores while restricting result reads to authenticated admins.
+Run `supabase/schema.sql` in the Supabase SQL Editor before using the CBT exam links. It creates the results table, one-attempt-per-name protection, completion-check RPC, and policies that allow students to submit scores while restricting result reads to authenticated admins.

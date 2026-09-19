@@ -249,6 +249,7 @@ CREATE TABLE IF NOT EXISTS public.cbt_exam_results (
 
 CREATE INDEX IF NOT EXISTS idx_cbt_exam_results_student_name ON public.cbt_exam_results (lower(student_name));
 CREATE INDEX IF NOT EXISTS idx_cbt_exam_results_completed_at ON public.cbt_exam_results (completed_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cbt_exam_results_one_attempt_per_student ON public.cbt_exam_results (lower(trim(student_name)));
 
 ALTER TABLE public.cbt_exam_results ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow public exam result insert" ON public.cbt_exam_results;
@@ -262,6 +263,22 @@ FOR SELECT TO authenticated USING (true);
 
 GRANT INSERT ON public.cbt_exam_results TO anon, authenticated;
 GRANT SELECT ON public.cbt_exam_results TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.has_completed_cbt_exam(p_student_name text)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.cbt_exam_results
+    WHERE lower(trim(student_name)) = lower(trim(p_student_name))
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.has_completed_cbt_exam(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.has_completed_cbt_exam(text) TO anon, authenticated;
 
 NOTIFY pgrst, 'reload schema';
 
