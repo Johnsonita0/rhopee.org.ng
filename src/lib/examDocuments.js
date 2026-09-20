@@ -38,7 +38,9 @@ const downloadPdf = (filename, jpegDataUrl, width, height) => {
   const link = document.createElement('a');
   link.href = URL.createObjectURL(new Blob(chunks, { type: 'application/pdf' }));
   link.download = filename;
+  document.body.appendChild(link);
   link.click();
+  link.remove();
   URL.revokeObjectURL(link.href);
 };
 
