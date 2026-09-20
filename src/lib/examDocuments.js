@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { createRoot } from 'react-dom/client';
 import { QRCodeSVG } from 'qrcode.react';
 
 const loadImage = (src) => new Promise((resolve, reject) => {
@@ -62,7 +62,23 @@ const roundedRect = (context, x, y, width, height, radius) => {
 };
 
 const qrDataUrl = async (value, size) => {
-  const svg = renderToStaticMarkup(createElement(QRCodeSVG, { value: String(value || ''), size, level: 'H', includeMargin: true }));
+  const host = document.createElement('div');
+  host.style.position = 'fixed';
+  host.style.left = '-10000px';
+  host.style.top = '0';
+  document.body.appendChild(host);
+  const root = createRoot(host);
+  root.render(createElement(QRCodeSVG, { value: String(value || ''), size, level: 'H', includeMargin: true }));
+  await new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
+  const svgElement = host.querySelector('svg');
+  if (!svgElement) {
+    root.unmount();
+    host.remove();
+    throw new Error('Unable to create certificate verification QR code.');
+  }
+  const svg = new XMLSerializer().serializeToString(svgElement);
+  root.unmount();
+  host.remove();
   const image = await loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
   const canvas = document.createElement('canvas');
   canvas.width = size;
