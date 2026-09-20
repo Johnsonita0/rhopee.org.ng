@@ -96,20 +96,69 @@ export async function downloadExamCertificate(result, displayName) {
   canvas.height = 768;
   const context = canvas.getContext('2d');
   context.drawImage(background, 0, 0, 1152, 768);
+  const cardX = 58;
+  const cardY = 320;
+  const cardWidth = 226;
+  const cardHeight = 250;
+  const cardRadius = 16;
+  context.fillStyle = '#fffefa';
+  context.beginPath();
+  context.roundRect(cardX, cardY, cardWidth, cardHeight, cardRadius);
+  context.fill();
+  context.strokeStyle = '#b88732';
+  context.lineWidth = 2.5;
+  context.stroke();
+  context.strokeStyle = 'rgba(184, 135, 50, .38)';
+  context.lineWidth = 1;
+  context.beginPath();
+  context.roundRect(cardX + 6, cardY + 6, cardWidth - 12, cardHeight - 12, 11);
+  context.stroke();
+  context.fillStyle = '#123d2a';
+  context.beginPath();
+  context.roundRect(cardX + 2, cardY + 2, cardWidth - 4, 35, 13);
+  context.fill();
+  context.fillStyle = '#f3d28a';
+  context.font = 'bold 10px Georgia, Times New Roman, serif';
+  context.textAlign = 'center';
+  context.fillText('CERTIFICATE DETAILS', cardX + cardWidth / 2, cardY + 24);
+  const drawCardRow = (label, value, top, fontSize = 12, separator = true) => {
+    context.fillStyle = '#9a7028';
+    context.font = 'bold 8px Arial, sans-serif';
+    context.textAlign = 'left';
+    context.fillText(label.toUpperCase(), cardX + 19, top + 15);
+    context.fillStyle = '#123d2a';
+    context.font = `bold ${fontSize}px Georgia, Times New Roman, serif`;
+    const maxWidth = cardWidth - 38;
+    const words = String(value).split(' ');
+    const lines = [];
+    let currentLine = '';
+    words.forEach((word) => {
+      const candidate = currentLine ? `${currentLine} ${word}` : word;
+      if (currentLine && context.measureText(candidate).width > maxWidth) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = candidate;
+      }
+    });
+    if (currentLine) lines.push(currentLine);
+    lines.slice(0, 2).forEach((line, index) => context.fillText(line, cardX + 19, top + 34 + (index * 13)));
+    if (separator) {
+      context.strokeStyle = '#dfc98d';
+      context.lineWidth = 1;
+      context.beginPath();
+      context.moveTo(cardX + 19, top + 57);
+      context.lineTo(cardX + cardWidth - 19, top + 57);
+      context.stroke();
+    }
+  };
+  drawCardRow('Course', result.certificate_course || 'Professional Web Development', cardY + 42, 11);
+  drawCardRow('Certificate number', certificateNumber, cardY + 100, 9);
+  drawCardRow('Date of issue', issueDate, cardY + 158, 10, false);
   context.fillStyle = '#0f2d1f';
   context.textAlign = 'center';
-  context.font = 'bold 24px Georgia, Times New Roman, serif';
-  context.fillText(certificateName.toUpperCase(), 576, 345);
-  context.fillStyle = '#fffdf8';
-  context.fillRect(125, 394, 165, 48);
-  context.fillRect(125, 468, 165, 42);
-  context.fillRect(125, 545, 165, 42);
-  context.fillStyle = '#0f2d1f';
-  context.font = '11px Georgia, Times New Roman, serif';
-  context.fillText(result.certificate_course || 'Professional Web Development', 207, 416);
-  context.font = '11px Georgia, Times New Roman, serif';
-  context.fillText(certificateNumber, 207, 494);
-  context.fillText(issueDate, 207, 572);
+  context.font = 'italic 600 26px Georgia, Times New Roman, serif';
+  context.fillText(certificateName, 576, 345);
   const qr = await loadImage(qrImage);
   context.drawImage(qr, 936, 348, 126, 126);
   downloadPdf(`rhopee-certificate-${safeFilePart(certificateName)}.pdf`, canvas.toDataURL('image/jpeg', .95), 1152, 768);
