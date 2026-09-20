@@ -33,7 +33,7 @@ const downloadPdf = (filename, jpegDataUrl, width, height) => {
   const content = `q\n${width} 0 0 ${height} 0 0 cm\n/Im1 Do\nQ`;
   addObject(5, '', `<< /Length ${encoder.encode(content).length} >>\nstream\n${content}\nendstream`);
   const xref = length;
-  const entries = [offsets[0], offsets[1], offsets[2], offsets[3], offsets[4], offsets[5]].map((offset) => String(offset).padStart(10, '0') + ' 00000 n ').join('\n');
+  const entries = [1, 2, 3, 4, 5].map((number) => String(offsets[number]).padStart(10, '0') + ' 00000 n ').join('\n');
   chunks.push(encoder.encode(`xref\n0 6\n0000000000 65535 f \n${entries}\ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`));
   const link = document.createElement('a');
   link.href = URL.createObjectURL(new Blob(chunks, { type: 'application/pdf' }));
@@ -62,7 +62,7 @@ const roundedRect = (context, x, y, width, height, radius) => {
 };
 
 const qrDataUrl = async (value, size) => {
-  const svg = renderToStaticMarkup(createElement(QRCodeSVG, { value, size, level: 'H', includeMargin: true }));
+  const svg = renderToStaticMarkup(createElement(QRCodeSVG, { value: String(value || ''), size, level: 'H', includeMargin: true }));
   const image = await loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
   const canvas = document.createElement('canvas');
   canvas.width = size;
