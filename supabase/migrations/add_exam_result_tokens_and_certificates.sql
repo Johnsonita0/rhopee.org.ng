@@ -1,5 +1,10 @@
 ALTER TABLE public.cbt_exam_results ADD COLUMN IF NOT EXISTS result_token uuid DEFAULT gen_random_uuid();
 ALTER TABLE public.cbt_exam_results ADD COLUMN IF NOT EXISTS certificate_published boolean NOT NULL DEFAULT false;
+ALTER TABLE public.cbt_exam_results ADD COLUMN IF NOT EXISTS certificate_name text;
+ALTER TABLE public.cbt_exam_results ADD COLUMN IF NOT EXISTS certificate_course text;
+ALTER TABLE public.cbt_exam_results ADD COLUMN IF NOT EXISTS certificate_chapter text;
+ALTER TABLE public.cbt_exam_results ADD COLUMN IF NOT EXISTS certificate_issue_date date;
+ALTER TABLE public.cbt_exam_results ADD COLUMN IF NOT EXISTS certificate_number text;
 UPDATE public.cbt_exam_results SET result_token = gen_random_uuid() WHERE result_token IS NULL;
 ALTER TABLE public.cbt_exam_results ALTER COLUMN result_token SET NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_cbt_exam_results_result_token ON public.cbt_exam_results (result_token);

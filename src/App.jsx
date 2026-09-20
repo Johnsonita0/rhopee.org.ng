@@ -9,6 +9,7 @@ import VerificationStatusPage from './pages/VerificationStatusPage.jsx';
 import AdminLoginPage from './pages/AdminLoginPage.jsx';
 import AdminDashboardPage from './pages/AdminDashboardPage.jsx';
 import ExamPage from './pages/ExamPage.jsx';
+import CertificateVerificationPage from './pages/CertificateVerificationPage.jsx';
 import { getAdminSession, signOutAdmin, verifyIdCode } from './lib/supabaseClient.js';
 import './css/App.css';
 import { decodeVerificationPayload, encodeVerificationPayload, parseScannableQrValue } from './lib/verificationPayload.js';
@@ -36,6 +37,7 @@ function App() {
     if (typeof window === 'undefined') return 'app';
     const path = window.location.pathname.toLowerCase();
     if (path === '/verifyme') return 'verify';
+    if (path === '/certificate-verify') return 'certificate-verify';
     if (path === '/admin') return 'admin';
     return 'app';
   });
@@ -287,6 +289,11 @@ function App() {
         return;
       }
 
+      if (currentPath === '/certificate-verify') {
+        setRouteMode('certificate-verify');
+        return;
+      }
+
       if (currentPath === '/admin') {
         setRouteMode('admin');
         return;
@@ -391,6 +398,10 @@ function App() {
         onClose={handleBackToScan}
       />
     );
+  }
+
+  if (routeMode === 'certificate-verify') {
+    return <CertificateVerificationPage />;
   }
 
   if (routeMode === 'admin') {

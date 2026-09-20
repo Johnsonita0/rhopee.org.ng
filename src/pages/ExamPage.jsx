@@ -61,7 +61,7 @@ const QUESTION_BANK = [
 ];
 
 const createResultToken = () => window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-const linkFor = (name, resultToken) => `${window.location.origin}/cbt/${encodeURIComponent(name.trim())}?result=${resultToken}`;
+const linkFor = (name, resultToken, certificateData) => `${window.location.origin}/cbt/${encodeURIComponent(name.trim())}?result=${resultToken}&cert=${encodeURIComponent(JSON.stringify(certificateData))}`;
 const formatStudentName = (name) => name.trim().toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 const formatTime = (seconds) => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 const studentQuestionSet = (name) => {
@@ -75,6 +75,10 @@ const studentQuestionSet = (name) => {
 
 function ExamPage({ studentName, resultToken = '' }) {
   const [namesInput, setNamesInput] = useState('');
+  const [certificateCourse, setCertificateCourse] = useState('Professional Web Development');
+  const [certificateChapter, setCertificateChapter] = useState('RHOPEE-NEF Akwa Ibom State Chapter');
+  const [certificateIssueDate, setCertificateIssueDate] = useState(new Date().toISOString().slice(0, 10));
+  const [certificatePrefix, setCertificatePrefix] = useState('RHOPEE/WD/2026');
   const [links, setLinks] = useState([]);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
@@ -119,6 +123,23 @@ function ExamPage({ studentName, resultToken = '' }) {
   const resultDateTime = resultData?.completed_at
     ? new Date(resultData.completed_at).toLocaleString('en-NG', { dateStyle: 'full', timeStyle: 'short' })
     : currentDateTime;
+  const certificateData = useMemo(() => {
+    if (resultData?.certificate_name) {
+      return {
+        name: resultData.certificate_name,
+        course: resultData.certificate_course || 'Professional Web Development',
+        chapter: resultData.certificate_chapter || 'RHOPEE-NEF Akwa Ibom State Chapter',
+        issueDate: resultData.certificate_issue_date || new Date(resultData.completed_at || Date.now()).toISOString().slice(0, 10),
+        certificateNumber: resultData.certificate_number || `RHOPEE/WD/2026/${resultTokenRef.current.slice(0, 6).toUpperCase()}`,
+      };
+    }
+    try {
+      const value = new URLSearchParams(window.location.search).get('cert');
+      return value ? JSON.parse(value) : { name: displayName, course: 'Professional Web Development', chapter: 'RHOPEE-NEF Akwa Ibom State Chapter', issueDate: new Date().toISOString().slice(0, 10), certificateNumber: `RHOPEE/WD/2026/${resultTokenRef.current.slice(0, 6).toUpperCase()}` };
+    } catch {
+      return { name: displayName, course: 'Professional Web Development', chapter: 'RHOPEE-NEF Akwa Ibom State Chapter', issueDate: new Date().toISOString().slice(0, 10), certificateNumber: `RHOPEE/WD/2026/${resultTokenRef.current.slice(0, 6).toUpperCase()}` };
+    }
+  }, [displayName, resultData]);
 
   useEffect(() => {
     if (!studentName) {
@@ -288,7 +309,14 @@ function ExamPage({ studentName, resultToken = '' }) {
     const names = [...new Set(namesInput.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean))];
     const generated = names.map((name) => {
       const resultToken = createResultToken();
-      return { name, resultToken, url: linkFor(name, resultToken) };
+      const certificateData = {
+        name,
+        course: certificateCourse,
+        chapter: certificateChapter,
+        issueDate: certificateIssueDate,
+        certificateNumber: `${certificatePrefix}/${resultToken.slice(0, 6).toUpperCase()}`,
+      };
+      return { name, resultToken, certificateData, url: linkFor(name, resultToken, certificateData) };
     });
     setLinks(generated);
     localStorage.setItem(savedLinksKey, JSON.stringify(generated));
@@ -335,6 +363,11 @@ function ExamPage({ studentName, resultToken = '' }) {
     const { data: savedResult, error: resultError } = await saveCbtExamResult({
       result_token: resultTokenRef.current,
       student_name: displayName,
+      certificate_name: certificateData.name || displayName,
+      certificate_course: certificateData.course,
+      certificate_chapter: certificateData.chapter,
+      certificate_issue_date: certificateData.issueDate,
+      certificate_number: certificateData.certificateNumber,
       score: resultScore,
       total_questions: examQuestions.length,
       percentage: Number(((resultScore / examQuestions.length) * 100).toFixed(2)),
@@ -364,6 +397,11 @@ function ExamPage({ studentName, resultToken = '' }) {
         completed_at: new Date().toISOString(),
         performance,
         certificate_published: false,
+        certificate_name: certificateData.name || displayName,
+        certificate_course: certificateData.course,
+        certificate_chapter: certificateData.chapter,
+        certificate_issue_date: certificateData.issueDate,
+        certificate_number: certificateData.certificateNumber,
       });
       window.sessionStorage.setItem('rhopee-cbt-completed-route', `/cbt/${encodeURIComponent(displayName)}`);
     }
@@ -517,6 +555,12 @@ function ExamPage({ studentName, resultToken = '' }) {
         <div><h2>Create student links</h2><p>Enter one name per line or separate names with commas.</p></div>
         <form onSubmit={generateLinks}>
           <textarea value={namesInput} onChange={(event) => setNamesInput(event.target.value)} placeholder={'Ada Lovelace\nAlan Turing'} rows="5" aria-label="Student names" />
+          <div className="certificate-fields">
+            <label>Certificate course<input value={certificateCourse} onChange={(event) => setCertificateCourse(event.target.value)} /></label>
+            <label>RHOPEE chapter<input value={certificateChapter} onChange={(event) => setCertificateChapter(event.target.value)} /></label>
+            <label>Issue date<input type="date" value={certificateIssueDate} onChange={(event) => setCertificateIssueDate(event.target.value)} /></label>
+            <label>Certificate number prefix<input value={certificatePrefix} onChange={(event) => setCertificatePrefix(event.target.value)} /></label>
+          </div>
           <button className="primary-button" type="submit">Generate exam links</button>
         </form>
       </section>
