@@ -191,7 +191,7 @@ export async function downloadExamCertificate(result, displayName) {
   context.fillStyle = '#0f2d1f';
   context.textAlign = 'center';
   context.font = 'italic 600 26px Georgia, Times New Roman, serif';
-  context.fillText(certificateName, 576, 345);
+  context.fillText(certificateName, 576, 318);
   const qr = await loadImage(qrImage);
   context.drawImage(qr, 936, 348, 126, 126);
   downloadPdf(`rhopee-certificate-${safeFilePart(certificateName)}.pdf`, canvas.toDataURL('image/jpeg', .95), 1152, 768);
