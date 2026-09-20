@@ -41,7 +41,24 @@ const downloadPdf = (filename, jpegDataUrl, width, height) => {
   document.body.appendChild(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(link.href);
+  window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+};
+
+const roundedRect = (context, x, y, width, height, radius) => {
+  if (typeof context.roundRect === 'function') {
+    context.roundRect(x, y, width, height, radius);
+    return;
+  }
+  context.moveTo(x + radius, y);
+  context.lineTo(x + width - radius, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + radius);
+  context.lineTo(x + width, y + height - radius);
+  context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  context.lineTo(x + radius, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - radius);
+  context.lineTo(x, y + radius);
+  context.quadraticCurveTo(x, y, x + radius, y);
+  context.closePath();
 };
 
 const qrDataUrl = async (value, size) => {
@@ -103,7 +120,7 @@ export async function downloadExamCertificate(result, displayName) {
   const cardRadius = 16;
   context.fillStyle = '#fffefa';
   context.beginPath();
-  context.roundRect(cardX, cardY, cardWidth, cardHeight, cardRadius);
+  roundedRect(context, cardX, cardY, cardWidth, cardHeight, cardRadius);
   context.fill();
   context.strokeStyle = '#b88732';
   context.lineWidth = 2.5;
@@ -111,11 +128,11 @@ export async function downloadExamCertificate(result, displayName) {
   context.strokeStyle = 'rgba(184, 135, 50, .38)';
   context.lineWidth = 1;
   context.beginPath();
-  context.roundRect(cardX + 6, cardY + 6, cardWidth - 12, cardHeight - 12, 11);
+  roundedRect(context, cardX + 6, cardY + 6, cardWidth - 12, cardHeight - 12, 11);
   context.stroke();
   context.fillStyle = '#123d2a';
   context.beginPath();
-  context.roundRect(cardX + 2, cardY + 2, cardWidth - 4, 35, 13);
+  roundedRect(context, cardX + 2, cardY + 2, cardWidth - 4, 35, 13);
   context.fill();
   context.fillStyle = '#f3d28a';
   context.font = 'bold 10px Georgia, Times New Roman, serif';

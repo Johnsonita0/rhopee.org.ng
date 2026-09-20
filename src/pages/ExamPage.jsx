@@ -89,6 +89,7 @@ function ExamPage({ studentName, resultToken = '' }) {
   const [warningDetails, setWarningDetails] = useState(null);
   const [examAccess, setExamAccess] = useState({ status: 'checking', message: '' });
   const [resultSaveError, setResultSaveError] = useState('');
+  const [certificateDownloadError, setCertificateDownloadError] = useState('');
   const [resultData, setResultData] = useState(null);
   const [showInstructionsModal, setShowInstructionsModal] = useState(true);
   const [instructionsAccepted, setInstructionsAccepted] = useState(false);
@@ -409,6 +410,16 @@ function ExamPage({ studentName, resultToken = '' }) {
 
   const submitExam = () => finishExam('submitted');
 
+  const downloadCertificate = async () => {
+    setCertificateDownloadError('');
+    try {
+      await downloadExamCertificate(resultData, displayName);
+    } catch (error) {
+      console.error('[CBT] Certificate download failed:', error);
+      setCertificateDownloadError('Certificate download failed. Please try again or check that the certificate artwork is available.');
+    }
+  };
+
   const stopMediaStream = () => {
     mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
     mediaStreamRef.current = null;
@@ -537,7 +548,7 @@ function ExamPage({ studentName, resultToken = '' }) {
             <div><span>Correct</span><strong>{score}</strong></div>
             <div><span>Needs review</span><strong>{incorrectCount}</strong></div>
           </div>
-          {resultData && <div className="results-downloads"><button className="primary-button" type="button" onClick={() => downloadExamReport(resultData, displayName)}>Download exam report</button>{resultData.certificate_published ? <button className="secondary-button" type="button" onClick={() => downloadExamCertificate(resultData, displayName)}>Download certificate</button> : <p className="certificate-pending">Certificate download will appear here after admin publication.</p>}</div>}
+          {resultData && <div className="results-downloads"><button className="primary-button" type="button" onClick={() => downloadExamReport(resultData, displayName)}>Download exam report</button>{resultData.certificate_published ? <button className="secondary-button" type="button" onClick={downloadCertificate}>Download certificate</button> : <p className="certificate-pending">Certificate download will appear here after admin publication.</p>}{certificateDownloadError && <p className="certificate-download-error" role="alert">{certificateDownloadError}</p>}</div>}
           {resultSaveError && <div className="result-sync-error" role="alert"><strong>Admin dashboard sync</strong><span>{resultSaveError}</span></div>}
           <div className="results-review"><div className="results-section-heading"><div><p className="eyebrow">ANSWER ANALYSIS</p><h3>Review your submission</h3></div><span>{warningCount} proctoring warning{warningCount === 1 ? '' : 's'}</span></div><div className="review-list">{examQuestions.map(([question, options, correctAnswer], questionIndex) => { const selectedAnswer = answers[questionIndex]; const isCorrect = selectedAnswer === correctAnswer; return <article className={isCorrect ? 'review-row correct-row' : 'review-row'} key={question}><div className="review-number">{String(questionIndex + 1).padStart(2, '0')}</div><div className="review-copy"><strong>{question}</strong><span>Your answer: {selectedAnswer === undefined ? 'Not answered' : options[selectedAnswer]}</span><span className="review-correct">Correct answer: {options[correctAnswer]}</span></div><div className="review-result">{isCorrect ? 'Correct' : 'Review'}</div></article>; })}</div></div>
         </section>}
