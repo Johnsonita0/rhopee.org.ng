@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import '../css/pages/ExamPage.css';
+import { getCameraStatus, MAX_MALPRACTICE_WARNINGS, shouldAutoSubmitMalpractice } from '../lib/examSafety.js';
 import { hasCompletedCbtExam, saveCbtExamResult } from '../lib/supabaseClient.js';
 
 const QUESTION_BANK = [
@@ -82,10 +83,14 @@ function ExamPage({ studentName }) {
   const [warningDetails, setWarningDetails] = useState(null);
   const [examAccess, setExamAccess] = useState({ status: 'checking', message: '' });
   const [resultSaveError, setResultSaveError] = useState('');
+  const [showInstructionsModal, setShowInstructionsModal] = useState(true);
+  const [instructionsAccepted, setInstructionsAccepted] = useState(false);
+  const [cameraStatus, setCameraStatus] = useState('safe');
   const videoRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const lastVideoFrameRef = useRef(null);
   const lastWarningAtRef = useRef(0);
+  const warningTimeoutRef = useRef(null);
   const startedAtRef = useRef(null);
   const answersRef = useRef(answers);
   const resultSavedRef = useRef(false);
@@ -164,14 +169,14 @@ function ExamPage({ studentName }) {
     const showWarning = (message, eventType) => {
       const now = Date.now();
       if (now - lastWarningAtRef.current < 3000) return;
+      const nextWarningCount = warningCountRef.current + 1;
       lastWarningAtRef.current = now;
-      setWarningCount((count) => {
-        warningCountRef.current = count + 1;
-        return count + 1;
-      });
+      warningCountRef.current = nextWarningCount;
+      setWarningCount(nextWarningCount);
+      setCameraStatus(getCameraStatus({ warningCount: nextWarningCount, hasWarning: true }));
       setWarning(message);
       setWarningDetails({ eventType, time: new Date(now).toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) });
-      window.setTimeout(() => setWarning(''), 4500);
+      if (shouldAutoSubmitMalpractice(nextWarningCount)) finishExam('malpractice_limit');
     };
 
     const handleVisibilityChange = () => {
@@ -204,12 +209,34 @@ function ExamPage({ studentName }) {
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
       window.clearInterval(motionCheck);
+      if (warningTimeoutRef.current) {
+        window.clearTimeout(warningTimeoutRef.current);
+        warningTimeoutRef.current = null;
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleWindowBlur);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       lastVideoFrameRef.current = null;
     };
   }, [started, submitted]);
+
+  useEffect(() => {
+    if (!warning) return undefined;
+
+    warningTimeoutRef.current = window.setTimeout(() => {
+      setWarning('');
+      setWarningDetails(null);
+      setCameraStatus(getCameraStatus({ warningCount: warningCountRef.current, hasWarning: false }));
+      warningTimeoutRef.current = null;
+    }, 4000);
+
+    return () => {
+      if (warningTimeoutRef.current) {
+        window.clearTimeout(warningTimeoutRef.current);
+        warningTimeoutRef.current = null;
+      }
+    };
+  }, [warning]);
 
   useEffect(() => () => {
     mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
@@ -242,12 +269,21 @@ function ExamPage({ studentName }) {
   const finishExam = async (completionReason = 'submitted') => {
     if (submitted || resultSavedRef.current) return;
 
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    setWarning('');
+    setWarningDetails(null);
     setSubmitted(true);
     setStarted(false);
+    setShowInstructionsModal(false);
     resultSavedRef.current = true;
     mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
     mediaStreamRef.current = null;
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+
+    if (warningTimeoutRef.current) {
+      window.clearTimeout(warningTimeoutRef.current);
+      warningTimeoutRef.current = null;
+    }
 
     const submittedAnswers = answersRef.current;
     const resultScore = examQuestions.reduce((total, question, index) => total + (submittedAnswers[index] === question[2] ? 1 : 0), 0);
@@ -288,8 +324,11 @@ function ExamPage({ studentName }) {
     mediaStreamRef.current = null;
   };
 
-  const startExam = async () => {
+  const beginExam = async () => {
     if (examAccess.status !== 'available') return;
+
+    setShowInstructionsModal(false);
+    setInstructionsAccepted(true);
 
     if (navigator.permissions?.query) {
       const [cameraPermission, microphonePermission] = await Promise.all([
@@ -334,7 +373,12 @@ function ExamPage({ studentName }) {
     resultSavedRef.current = false;
     warningCountRef.current = 0;
     setWarningCount(0);
+    setCameraStatus('safe');
     setStarted(true);
+  };
+
+  const openRulesModal = () => {
+    setShowInstructionsModal(true);
   };
 
   if (studentName) {
@@ -353,9 +397,25 @@ function ExamPage({ studentName }) {
           {examAccess.status === 'checking' && <><h2>Checking exam access...</h2><p>Please wait while we verify this student link.</p></>}
           {examAccess.status === 'completed' && <><h2>Exam already submitted</h2><p>{examAccess.message}</p></>}
           {examAccess.status === 'error' && <><h2>Exam access unavailable</h2><p>{examAccess.message}</p><p className="proctoring-note">Ask the administrator to apply the latest supabase/schema.sql file.</p></>}
-          {examAccess.status === 'available' && <><h2>Ready to begin?</h2><p>This exam contains 40 questions and has a 45-minute time limit.</p><p className="proctoring-note">Starting requests fullscreen, camera, and microphone access for exam monitoring.</p><button className="primary-button" type="button" onClick={startExam}>Start exam</button></>}
+          {examAccess.status === 'available' && <><h2>Ready to begin?</h2><p>This exam contains 40 questions and has a 45-minute time limit.</p><p className="proctoring-note">Read the rules, accept them, and then the exam will request fullscreen, camera, and microphone access for monitoring.</p><button className="primary-button" type="button" onClick={openRulesModal}>Start exam</button></>}
         </section>}
-        {started && <div className="proctor-preview" aria-label="Live camera monitoring"><div className="proctor-preview-header"><span className="recording-dot" /> <strong>LIVE MONITORING</strong><span>Camera</span></div><video ref={videoRef} className="proctor-camera" muted playsInline /></div>}
+        {showInstructionsModal && examAccess.status === 'available' && !started && !submitted && (
+          <div className="rules-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="exam-rules-title">
+            <div className="rules-modal">
+              <h2 id="exam-rules-title">Exam rules and instructions</h2>
+              <ul className="rules-list">
+                <li>Complete the exam alone and do not share answers or consult other people.</li>
+                <li>Stay in full-screen mode throughout the exam. Leaving fullscreen or switching tabs is treated as malpractice.</li>
+                <li>Keep your camera and microphone on. The system monitors your environment continuously.</li>
+                <li>Do not use external resources, notes, websites, AI assistants, or messaging apps during the test.</li>
+                <li>Answer all questions honestly and submit only when you are satisfied with your work.</li>
+                <li>If the monitoring system records multiple malpractice incidents, the exam will auto-submit once the warning count reaches 10.</li>
+              </ul>
+              <button className="primary-button" type="button" onClick={beginExam}>Accept and begin exam</button>
+            </div>
+          </div>
+        )}
+        {started && <div className={`proctor-preview ${cameraStatus}`} aria-label={`Live camera monitoring: ${cameraStatus === 'safe' ? 'no malpractice detected' : 'malpractice detected'}`}><div className={`proctor-preview-header ${cameraStatus}`}><span className="recording-dot" /> <strong>LIVE MONITORING</strong><span>{cameraStatus === 'safe' ? 'Safe' : 'Warning'}</span></div><video ref={videoRef} className="proctor-camera" muted playsInline /></div>}
         {warning && <div className="warning-toast" role="alert"><div className="warning-toast-title"><span aria-hidden>!</span><strong>Malpractice warning {warningCount}</strong></div><span>{warning}</span>{warningDetails && <small>{warningDetails.eventType} · {warningDetails.time}</small>}</div>}
         {started && <>
           <section className="question-list">
