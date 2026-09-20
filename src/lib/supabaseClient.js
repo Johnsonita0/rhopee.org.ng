@@ -234,6 +234,21 @@ export async function getPublicCbtExamResult(resultToken) {
   }
 }
 
+export async function getPublicCbtExamResultByStudentName(studentName) {
+  if (missingSupabaseConfig || !supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') };
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('get_public_cbt_exam_result_by_student_name', {
+      p_student_name: studentName,
+    });
+    return { data: data?.[0] || null, error };
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
 export async function hasCompletedCbtExam(studentName) {
   if (missingSupabaseConfig || !supabase) {
     return { data: false, error: new Error('Supabase is not configured.') };

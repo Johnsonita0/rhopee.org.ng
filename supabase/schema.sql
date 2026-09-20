@@ -289,6 +289,21 @@ $$;
 REVOKE ALL ON FUNCTION public.get_public_cbt_exam_result(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_public_cbt_exam_result(uuid) TO anon, authenticated;
 
+CREATE OR REPLACE FUNCTION public.get_public_cbt_exam_result_by_student_name(p_student_name text)
+RETURNS SETOF public.cbt_exam_results
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT * FROM public.cbt_exam_results
+  WHERE lower(trim(student_name)) = lower(trim(p_student_name))
+  ORDER BY completed_at DESC
+  LIMIT 1;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_public_cbt_exam_result_by_student_name(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_public_cbt_exam_result_by_student_name(text) TO anon, authenticated;
+
 CREATE OR REPLACE FUNCTION public.has_completed_cbt_exam(p_student_name text)
 RETURNS boolean
 LANGUAGE sql

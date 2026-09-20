@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import '../css/pages/ExamPage.css';
 import { getCameraStatus, MAX_MALPRACTICE_WARNINGS, shouldAutoSubmitMalpractice } from '../lib/examSafety.js';
-import { getPublicCbtExamResult, hasCompletedCbtExam, saveCbtExamResult } from '../lib/supabaseClient.js';
+import { getPublicCbtExamResult, getPublicCbtExamResultByStudentName, hasCompletedCbtExam, saveCbtExamResult } from '../lib/supabaseClient.js';
 import { downloadExamCertificate, downloadExamReport } from '../lib/examDocuments.js';
 
 const QUESTION_BANK = [
@@ -134,6 +134,21 @@ function ExamPage({ studentName, resultToken = '' }) {
     if (!studentName) return undefined;
 
     let isMounted = true;
+    const restoreSubmittedResult = (data) => {
+      if (!data) return;
+      const restoredAnswers = {};
+      (data.performance || []).forEach((entry, index) => {
+        const answerIndex = examQuestions[index]?.[1].indexOf(entry.selected_answer);
+        if (answerIndex >= 0) restoredAnswers[index] = answerIndex;
+      });
+      setAnswers(restoredAnswers);
+      answersRef.current = restoredAnswers;
+      setResultData(data);
+      setWarningCount(data.warning_count || 0);
+      warningCountRef.current = data.warning_count || 0;
+      setSubmitted(true);
+      setExamAccess({ status: 'completed', message: 'This exam has already been submitted.' });
+    };
     if (resultToken) {
       getPublicCbtExamResult(resultToken).then(({ data, error }) => {
         if (!isMounted) return;
@@ -141,20 +156,7 @@ function ExamPage({ studentName, resultToken = '' }) {
           setResultSaveError(error.message || 'Unable to load the submitted exam report.');
           return;
         }
-        if (data) {
-          const restoredAnswers = {};
-          (data.performance || []).forEach((entry, index) => {
-            const answerIndex = examQuestions[index]?.[1].indexOf(entry.selected_answer);
-            if (answerIndex >= 0) restoredAnswers[index] = answerIndex;
-          });
-          setAnswers(restoredAnswers);
-          answersRef.current = restoredAnswers;
-          setResultData(data);
-          setWarningCount(data.warning_count || 0);
-          warningCountRef.current = data.warning_count || 0;
-          setSubmitted(true);
-          setExamAccess({ status: 'completed', message: 'This exam has already been submitted.' });
-        }
+        restoreSubmittedResult(data);
       });
     }
     hasCompletedCbtExam(displayName).then(({ data, error }) => {
@@ -162,7 +164,10 @@ function ExamPage({ studentName, resultToken = '' }) {
       if (error) {
         setExamAccess({ status: 'error', message: error.message || 'Unable to verify exam access.' });
       } else if (data) {
-        setExamAccess({ status: 'completed', message: 'This exam link has already been submitted and cannot be used again.' });
+        getPublicCbtExamResultByStudentName(displayName).then(({ data: result }) => {
+          if (isMounted) restoreSubmittedResult(result);
+        });
+        setExamAccess({ status: 'completed', message: 'This exam link has already been submitted.' });
       } else {
         setExamAccess({ status: 'available', message: '' });
       }
