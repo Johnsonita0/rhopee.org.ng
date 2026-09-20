@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import '../css/pages/AdminDashboardPage.css';
 import ConfirmationSlip from '../components/ConfirmationSlip.jsx';
-import { getAllTrainingRegistrations, getAllClassFeedback, getAllCbtExamResults, deleteClassFeedback, deleteTrainingRegistration } from '../lib/supabaseClient.js';
+import { getAllTrainingRegistrations, getAllClassFeedback, getAllCbtExamResults, deleteClassFeedback, deleteTrainingRegistration, publishCbtCertificate } from '../lib/supabaseClient.js';
 import { filterRegistrations } from '../lib/dashboardFilters.js';
 
 const trackLabels = {
@@ -62,6 +62,7 @@ function AdminDashboardPage({ onLogout }) {
   const [examResults, setExamResults] = useState([]);
   const [examResultsLoading, setExamResultsLoading] = useState(false);
   const [examResultsError, setExamResultsError] = useState('');
+  const [publishingCertificateId, setPublishingCertificateId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const escapeHtml = (value = '') =>
@@ -476,6 +477,18 @@ function AdminDashboardPage({ onLogout }) {
     }
   };
 
+  const toggleCertificatePublication = async (attempt) => {
+    if (!attempt?.id) return;
+    setPublishingCertificateId(attempt.id);
+    const { data, error: publishError } = await publishCbtCertificate(attempt.id, !attempt.certificate_published);
+    if (publishError) {
+      setExamResultsError(publishError.message || 'Unable to update certificate publication.');
+    } else {
+      setExamResults((current) => current.map((result) => result.id === attempt.id ? { ...result, ...data } : result));
+    }
+    setPublishingCertificateId(null);
+  };
+
   useEffect(() => {
     let isMounted = true;
     let toastTimer = null;
@@ -673,6 +686,7 @@ function AdminDashboardPage({ onLogout }) {
                           <span>{attempt.completion_reason === 'time_expired' ? 'Time expired' : 'Submitted'}</span>
                           <span>{attempt.warning_count || 0} warnings</span>
                           <time dateTime={attempt.completed_at}>{formatDateTime(attempt.completed_at)}</time>
+                          <button type="button" className="admin-action-btn secondary" onClick={() => toggleCertificatePublication(attempt)} disabled={publishingCertificateId === attempt.id}>{publishingCertificateId === attempt.id ? 'Saving...' : attempt.certificate_published ? 'Unpublish certificate' : 'Publish certificate'}</button>
                         </div>
                       ))}
                     </div>

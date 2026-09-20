@@ -219,6 +219,21 @@ export async function saveCbtExamResult(result) {
   }
 }
 
+export async function getPublicCbtExamResult(resultToken) {
+  if (missingSupabaseConfig || !supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') };
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('get_public_cbt_exam_result', {
+      p_result_token: resultToken,
+    });
+    return { data: data?.[0] || null, error };
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
 export async function hasCompletedCbtExam(studentName) {
   if (missingSupabaseConfig || !supabase) {
     return { data: false, error: new Error('Supabase is not configured.') };
@@ -248,6 +263,24 @@ export async function getAllCbtExamResults() {
     return { data: data || [], error };
   } catch (error) {
     return { data: [], error };
+  }
+}
+
+export async function publishCbtCertificate(resultId, published) {
+  if (missingSupabaseConfig || !supabase) {
+    return { data: null, error: new Error('Supabase is not configured.') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('cbt_exam_results')
+      .update({ certificate_published: published })
+      .eq('id', resultId)
+      .select()
+      .single();
+    return { data, error };
+  } catch (error) {
+    return { data: null, error };
   }
 }
 

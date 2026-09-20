@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import '../css/pages/ExamPage.css';
 import { getCameraStatus, MAX_MALPRACTICE_WARNINGS, shouldAutoSubmitMalpractice } from '../lib/examSafety.js';
-import { hasCompletedCbtExam, saveCbtExamResult } from '../lib/supabaseClient.js';
+import { getPublicCbtExamResult, hasCompletedCbtExam, saveCbtExamResult } from '../lib/supabaseClient.js';
+import { downloadExamCertificate, downloadExamReport } from '../lib/examDocuments.js';
 
 const QUESTION_BANK = [
   ['What does HTML stand for?', ['HyperText Markup Language', 'HighText Machine Language', 'Hyperlink Text Management Language', 'Home Tool Markup Language'], 0],
@@ -59,7 +60,8 @@ const QUESTION_BANK = [
   ['What does getElementById find?', ['An element with a specific id', 'Every paragraph', 'A CSS file', 'A browser window'], 0],
 ];
 
-const linkFor = (name) => `${window.location.origin}/cbt/${encodeURIComponent(name.trim())}`;
+const createResultToken = () => window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const linkFor = (name, resultToken) => `${window.location.origin}/cbt/${encodeURIComponent(name.trim())}?result=${resultToken}`;
 const formatStudentName = (name) => name.trim().toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 const formatTime = (seconds) => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 const studentQuestionSet = (name) => {
@@ -71,7 +73,7 @@ const studentQuestionSet = (name) => {
   return randomized.slice(0, 40);
 };
 
-function ExamPage({ studentName }) {
+function ExamPage({ studentName, resultToken = '' }) {
   const [namesInput, setNamesInput] = useState('');
   const [links, setLinks] = useState([]);
   const [answers, setAnswers] = useState({});
@@ -83,6 +85,7 @@ function ExamPage({ studentName }) {
   const [warningDetails, setWarningDetails] = useState(null);
   const [examAccess, setExamAccess] = useState({ status: 'checking', message: '' });
   const [resultSaveError, setResultSaveError] = useState('');
+  const [resultData, setResultData] = useState(null);
   const [showInstructionsModal, setShowInstructionsModal] = useState(true);
   const [instructionsAccepted, setInstructionsAccepted] = useState(false);
   const [cameraStatus, setCameraStatus] = useState('safe');
@@ -95,6 +98,7 @@ function ExamPage({ studentName }) {
   const answersRef = useRef(answers);
   const resultSavedRef = useRef(false);
   const warningCountRef = useRef(0);
+  const resultTokenRef = useRef(resultToken || createResultToken());
 
   const savedLinksKey = 'rhopee-cbt-links';
   const examQuestions = useMemo(() => studentQuestionSet(studentName || 'default-student'), [studentName]);
@@ -112,6 +116,9 @@ function ExamPage({ studentName }) {
   }), []);
   const answeredCount = Object.keys(answers).length;
   const incorrectCount = answeredCount - score;
+  const resultDateTime = resultData?.completed_at
+    ? new Date(resultData.completed_at).toLocaleString('en-NG', { dateStyle: 'full', timeStyle: 'short' })
+    : currentDateTime;
 
   useEffect(() => {
     if (!studentName) {
@@ -127,6 +134,29 @@ function ExamPage({ studentName }) {
     if (!studentName) return undefined;
 
     let isMounted = true;
+    if (resultToken) {
+      getPublicCbtExamResult(resultToken).then(({ data, error }) => {
+        if (!isMounted) return;
+        if (error) {
+          setResultSaveError(error.message || 'Unable to load the submitted exam report.');
+          return;
+        }
+        if (data) {
+          const restoredAnswers = {};
+          (data.performance || []).forEach((entry, index) => {
+            const answerIndex = examQuestions[index]?.[1].indexOf(entry.selected_answer);
+            if (answerIndex >= 0) restoredAnswers[index] = answerIndex;
+          });
+          setAnswers(restoredAnswers);
+          answersRef.current = restoredAnswers;
+          setResultData(data);
+          setWarningCount(data.warning_count || 0);
+          warningCountRef.current = data.warning_count || 0;
+          setSubmitted(true);
+          setExamAccess({ status: 'completed', message: 'This exam has already been submitted.' });
+        }
+      });
+    }
     hasCompletedCbtExam(displayName).then(({ data, error }) => {
       if (!isMounted) return;
       if (error) {
@@ -141,7 +171,7 @@ function ExamPage({ studentName }) {
     return () => {
       isMounted = false;
     };
-  }, [displayName, studentName]);
+  }, [displayName, examQuestions, resultToken, studentName]);
 
   useEffect(() => {
     answersRef.current = answers;
@@ -251,7 +281,10 @@ function ExamPage({ studentName }) {
   const generateLinks = (event) => {
     event.preventDefault();
     const names = [...new Set(namesInput.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean))];
-    const generated = names.map((name) => ({ name, url: linkFor(name) }));
+    const generated = names.map((name) => {
+      const resultToken = createResultToken();
+      return { name, resultToken, url: linkFor(name, resultToken) };
+    });
     setLinks(generated);
     localStorage.setItem(savedLinksKey, JSON.stringify(generated));
   };
@@ -294,7 +327,8 @@ function ExamPage({ studentName }) {
       is_correct: submittedAnswers[index] === correctAnswer,
     }));
 
-    const { error: resultError } = await saveCbtExamResult({
+    const { data: savedResult, error: resultError } = await saveCbtExamResult({
+      result_token: resultTokenRef.current,
       student_name: displayName,
       score: resultScore,
       total_questions: examQuestions.length,
@@ -313,6 +347,19 @@ function ExamPage({ studentName }) {
         ? 'Admin sync is not ready yet. Run supabase/schema.sql in the Supabase SQL Editor, then submit a new attempt.'
         : `Admin sync failed: ${resultError.message || 'the result could not be saved.'}`);
     } else if (typeof window !== 'undefined') {
+      setResultData(savedResult || {
+        result_token: resultTokenRef.current,
+        student_name: displayName,
+        score: resultScore,
+        total_questions: examQuestions.length,
+        percentage: Number(((resultScore / examQuestions.length) * 100).toFixed(2)),
+        passed: resultScore >= 24,
+        completion_reason: completionReason,
+        warning_count: warningCountRef.current,
+        completed_at: new Date().toISOString(),
+        performance,
+        certificate_published: false,
+      });
       window.sessionStorage.setItem('rhopee-cbt-completed-route', `/cbt/${encodeURIComponent(displayName)}`);
     }
   };
@@ -438,15 +485,16 @@ function ExamPage({ studentName }) {
         </>}
         {submitted && <section className="results-page">
           <div className={score >= 24 ? 'results-hero passed' : 'results-hero'}>
-            <div><p className="eyebrow">EXAM SUBMISSION COMPLETE</p><h2>{score >= 24 ? 'Congratulations, ' : 'Keep practising, '}{displayName}</h2><p>Submitted on {currentDateTime}</p></div>
-            <div className="results-score"><strong>{score}<small>/40</small></strong><span>{score >= 24 ? 'Passed' : 'Not passed'}</span></div>
+            <div><p className="eyebrow">EXAM SUBMISSION COMPLETE</p><h2>{(resultData?.passed ?? score >= 24) ? 'Congratulations, ' : 'Keep practising, '}{displayName}</h2><p>Submitted on {resultDateTime}</p></div>
+            <div className="results-score"><strong>{resultData?.score ?? score}<small>/{resultData?.total_questions || 40}</small></strong><span>{(resultData?.passed ?? score >= 24) ? 'Passed' : 'Not passed'}</span></div>
           </div>
           <div className="results-metrics">
-            <div><span>Percentage</span><strong>{((score / examQuestions.length) * 100).toFixed(1)}%</strong></div>
+            <div><span>Percentage</span><strong>{Number(resultData?.percentage ?? ((score / examQuestions.length) * 100)).toFixed(1)}%</strong></div>
             <div><span>Answered</span><strong>{answeredCount}/40</strong></div>
             <div><span>Correct</span><strong>{score}</strong></div>
             <div><span>Needs review</span><strong>{incorrectCount}</strong></div>
           </div>
+          {resultData && <div className="results-downloads"><button className="primary-button" type="button" onClick={() => downloadExamReport(resultData, displayName)}>Download exam report</button>{resultData.certificate_published ? <button className="secondary-button" type="button" onClick={() => downloadExamCertificate(resultData, displayName)}>Download certificate</button> : <p className="certificate-pending">Certificate download will appear here after admin publication.</p>}</div>}
           {resultSaveError && <div className="result-sync-error" role="alert"><strong>Admin dashboard sync</strong><span>{resultSaveError}</span></div>}
           <div className="results-review"><div className="results-section-heading"><div><p className="eyebrow">ANSWER ANALYSIS</p><h3>Review your submission</h3></div><span>{warningCount} proctoring warning{warningCount === 1 ? '' : 's'}</span></div><div className="review-list">{examQuestions.map(([question, options, correctAnswer], questionIndex) => { const selectedAnswer = answers[questionIndex]; const isCorrect = selectedAnswer === correctAnswer; return <article className={isCorrect ? 'review-row correct-row' : 'review-row'} key={question}><div className="review-number">{String(questionIndex + 1).padStart(2, '0')}</div><div className="review-copy"><strong>{question}</strong><span>Your answer: {selectedAnswer === undefined ? 'Not answered' : options[selectedAnswer]}</span><span className="review-correct">Correct answer: {options[correctAnswer]}</span></div><div className="review-result">{isCorrect ? 'Correct' : 'Review'}</div></article>; })}</div></div>
         </section>}

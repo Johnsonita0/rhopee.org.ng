@@ -54,4 +54,6 @@ Your database is now updated. The app should work perfectly and show the "Member
 
 ## CBT exam results
 
-Run `supabase/schema.sql` in the Supabase SQL Editor before using the CBT exam links. It creates the results table, one-attempt-per-name protection, completion-check RPC, and policies that allow students to submit scores while restricting result reads to authenticated admins.
+Run `supabase/schema.sql` in the Supabase SQL Editor before using the CBT exam links. It creates the results table, one-attempt-per-name protection, UUID result links, completion/report RPCs, certificate publication state, and policies that allow students to submit scores while restricting result reads to the token RPC and authenticated admins.
+
+For an existing CBT table, run `supabase/migrations/add_exam_result_tokens_and_certificates.sql` once. New exam links include their UUID in the URL, so students can reopen the same submitted result page. Admins publish certificates from the CBT results tab; the certificate download becomes visible on the student link after publication.

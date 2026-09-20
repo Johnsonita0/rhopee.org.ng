@@ -234,6 +234,7 @@ GRANT EXECUTE ON FUNCTION public.delete_class_feedback(uuid) TO authenticated;
 -- =====================================================
 CREATE TABLE IF NOT EXISTS public.cbt_exam_results (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  result_token uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
   student_name text NOT NULL,
   score integer NOT NULL CHECK (score >= 0),
   total_questions integer NOT NULL CHECK (total_questions > 0),
@@ -244,8 +245,15 @@ CREATE TABLE IF NOT EXISTS public.cbt_exam_results (
   started_at timestamptz,
   completed_at timestamptz NOT NULL DEFAULT now(),
   performance jsonb NOT NULL DEFAULT '[]'::jsonb,
+  certificate_published boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.cbt_exam_results ADD COLUMN IF NOT EXISTS result_token uuid DEFAULT gen_random_uuid();
+ALTER TABLE public.cbt_exam_results ADD COLUMN IF NOT EXISTS certificate_published boolean NOT NULL DEFAULT false;
+UPDATE public.cbt_exam_results SET result_token = gen_random_uuid() WHERE result_token IS NULL;
+ALTER TABLE public.cbt_exam_results ALTER COLUMN result_token SET NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cbt_exam_results_result_token ON public.cbt_exam_results (result_token);
 
 CREATE INDEX IF NOT EXISTS idx_cbt_exam_results_student_name ON public.cbt_exam_results (lower(student_name));
 CREATE INDEX IF NOT EXISTS idx_cbt_exam_results_completed_at ON public.cbt_exam_results (completed_at DESC);
@@ -254,6 +262,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_cbt_exam_results_one_attempt_per_student O
 ALTER TABLE public.cbt_exam_results ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow public exam result insert" ON public.cbt_exam_results;
 DROP POLICY IF EXISTS "Allow authenticated exam result select" ON public.cbt_exam_results;
+DROP POLICY IF EXISTS "Allow authenticated exam result update" ON public.cbt_exam_results;
 
 CREATE POLICY "Allow public exam result insert" ON public.cbt_exam_results
 FOR INSERT TO anon, authenticated WITH CHECK (true);
@@ -261,8 +270,24 @@ FOR INSERT TO anon, authenticated WITH CHECK (true);
 CREATE POLICY "Allow authenticated exam result select" ON public.cbt_exam_results
 FOR SELECT TO authenticated USING (true);
 
+CREATE POLICY "Allow authenticated exam result update" ON public.cbt_exam_results
+FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+
 GRANT INSERT ON public.cbt_exam_results TO anon, authenticated;
 GRANT SELECT ON public.cbt_exam_results TO authenticated;
+GRANT UPDATE ON public.cbt_exam_results TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.get_public_cbt_exam_result(p_result_token uuid)
+RETURNS SETOF public.cbt_exam_results
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT * FROM public.cbt_exam_results WHERE result_token = p_result_token LIMIT 1;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_public_cbt_exam_result(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_public_cbt_exam_result(uuid) TO anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.has_completed_cbt_exam(p_student_name text)
 RETURNS boolean

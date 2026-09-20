@@ -20,6 +20,7 @@ function App() {
   const [error, setError] = useState('');
   const [page, setPage] = useState('home');
   const [examStudent, setExamStudent] = useState('');
+  const [examResultToken, setExamResultToken] = useState('');
   const [scannedMemberData, setScannedMemberData] = useState(null);
   const [adminAuthenticated, setAdminAuthenticated] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -294,6 +295,7 @@ function App() {
       if (currentPath === '/cbt' || currentPath.startsWith('/cbt/')) {
         setRouteMode('app');
         setExamStudent(currentPath.startsWith('/cbt/') ? decodeURIComponent(currentPath.slice(5)) : '');
+        setExamResultToken(new URLSearchParams(window.location.search).get('result') || '');
         setPage('cbt');
         return;
       }
@@ -400,7 +402,7 @@ function App() {
   }
 
   if (page === 'cbt' && examStudent) {
-    return <ExamPage studentName={examStudent} />;
+    return <ExamPage studentName={examStudent} resultToken={examResultToken} />;
   }
 
   return (
@@ -426,7 +428,7 @@ function App() {
         {page === 'register' && <RegistrationPage />}
         {page === 'event-register' && <EventRegistrationPage />}
         {page === 'feedback' && <FeedbackPage />}
-        {page === 'cbt' && <ExamPage studentName={examStudent} />}
+        {page === 'cbt' && <ExamPage studentName={examStudent} resultToken={examResultToken} />}
       </div>
       <footer className="app-footer">
         <p>© {new Date().getFullYear()} RHOPEE. One Nigeria, One People, One Future</p>
